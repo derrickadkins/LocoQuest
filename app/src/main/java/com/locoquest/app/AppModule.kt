@@ -17,7 +17,7 @@ class AppModule {
         const val DEFAULT_REACH = 150.0
         const val BOOSTED_REACH = 250.0
         const val BOOSTED_DURATION = 300
-        const val DEBUG = true
+        const val DEBUG = false
         val SECONDS_TO_RECOLLECT = if(DEBUG) 30 else 14400 // 4 hrs
 
         fun scheduleNotification(context: Context, benchmark: Benchmark){
