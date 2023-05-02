@@ -19,9 +19,10 @@ class NotifyReceiver : BroadcastReceiver() {
     var notificationManagerCompat: NotificationManagerCompat? = null
 
     override fun onReceive(context: Context?, intent: Intent?) {
+        val id = intent?.extras?.get("pid") as String? ?: 0
         val name = intent?.extras?.get("name") as String?
-        val contentText = if(name == null) "Coin is available to be collected again"
-                          else "Coin ($name) is available to be collected again"
+        val contentText = if (name == null) "Coin is available to be collected again"
+        else "Coin ($name) is available to be collected again"
 
         Log.d("notify receiver", "intent received for $name")
 
@@ -29,10 +30,15 @@ class NotifyReceiver : BroadcastReceiver() {
         notificationManagerCompat = NotificationManagerCompat.from(context)
 
         val contentIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(context, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            id.hashCode(),
+            contentIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.coin)
+            .setSmallIcon(R.drawable.locoquest_notification_icon)
             .setLargeIcon(
                 BitmapFactory.decodeResource(
                     context.resources,
@@ -45,12 +51,12 @@ class NotifyReceiver : BroadcastReceiver() {
             .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .setContentTitle("Coin")
+            .setContentTitle("LocoQuest")
             .setContentText(contentText)
 
         val notification = builder!!.build()
         notification.flags = notification.flags or Notification.FLAG_SHOW_LIGHTS
-        notificationManagerCompat!!.notify(NOTIFICATION_ID, notification)
+        notificationManagerCompat!!.notify(id.hashCode(), notification)
     }
 
     private fun createNotificationChannel(context: Context) {
@@ -73,7 +79,6 @@ class NotifyReceiver : BroadcastReceiver() {
     }
 
     companion object{
-        private const val NOTIFICATION_ID = 0
         private const val CHANNEL_ID = "LocoQuest.Coin"
     }
 }

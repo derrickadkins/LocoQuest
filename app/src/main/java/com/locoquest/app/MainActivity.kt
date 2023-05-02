@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(null)
         Log.d("event", "MainActivity.onCreate")
         setContentView(R.layout.activity_main)
 
@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
 
     override fun onCoinCollected(benchmark: Benchmark) {
         Log.d("event", "MainActivity.onCoinCollected")
-        Toast.makeText(this, "Coin collected", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, "Coin collected", Toast.LENGTH_SHORT).show()
         supportFragmentManager.beginTransaction().replace(R.id.secondary_container, CoinCollectedDialog(this, this)).commit()
         if(benchmark.notify) scheduleNotification(this, benchmark)
     }

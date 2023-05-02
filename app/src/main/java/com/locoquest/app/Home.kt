@@ -459,7 +459,17 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                             val marker = entry.value
                             iterator.remove()
                             markerToBenchmark.remove(marker)
-                            Handler(Looper.getMainLooper()).post { marker.remove() }
+                            Handler(Looper.getMainLooper()).post {
+                                try {
+                                    if(selectedMarker == marker){
+                                        selectedMarker = null
+                                        notifyFab.visibility = View.GONE
+                                    }
+                                    marker.remove()
+                                }catch (e: Exception){
+                                    Log.e("marker", e.toString())
+                                }
+                            }
                         }
                     }
 

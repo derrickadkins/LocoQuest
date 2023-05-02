@@ -17,13 +17,15 @@ class AppModule {
         const val DEFAULT_REACH = 150.0
         const val BOOSTED_REACH = 250.0
         const val BOOSTED_DURATION = 300
-        const val DEBUG = false
+        const val DEBUG = true
         val SECONDS_TO_RECOLLECT = if(DEBUG) 30 else 14400 // 4 hrs
 
         fun scheduleNotification(context: Context, benchmark: Benchmark){
             Log.d("notify", "scheduling notification for ${benchmark.name}")
-            val notificationIntent = Intent(context, NotifyReceiver::class.java).putExtra("name", benchmark.name)
-            val pendingIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            val notificationIntent = Intent(context, NotifyReceiver::class.java)
+                .putExtra("pid", benchmark.pid)
+                .putExtra("name", benchmark.name)
+            val pendingIntent = PendingIntent.getBroadcast(context, benchmark.pid.hashCode(), notificationIntent, PendingIntent.FLAG_IMMUTABLE/* or PendingIntent.FLAG_UPDATE_CURRENT*/)
             val ms = 1000 * (benchmark.lastVisited + SECONDS_TO_RECOLLECT)
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -32,8 +34,10 @@ class AppModule {
 
         fun cancelNotification(context: Context, benchmark: Benchmark){
             Log.d("notify", "cancelling notification for ${benchmark.name}")
-            val notificationIntent = Intent(context, NotifyReceiver::class.java).putExtra("name", benchmark.name)
-            val pendingIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+            val notificationIntent = Intent(context, NotifyReceiver::class.java)
+                .putExtra("pid", benchmark.pid)
+                .putExtra("name", benchmark.name)
+            val pendingIntent = PendingIntent.getBroadcast(context, benchmark.pid.hashCode(), notificationIntent, PendingIntent.FLAG_IMMUTABLE/* or PendingIntent.FLAG_UPDATE_CURRENT*/)
 
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarmManager.cancel(pendingIntent)
