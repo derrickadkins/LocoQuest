@@ -18,7 +18,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -109,18 +108,26 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Log.d("event", "MainActivity.onRequestPermissionsResult")
         if(grantResults.isEmpty()) return
-        if(grantResults[0] == 0) {
-            home.startLocationUpdates()
-            home.updateCameraWithLastLocation(false)
-        }
-        else if(grantResults[0] == -1 && grantResults[1] == -1){
-            AlertDialog.Builder(this)
-                .setTitle("Location Permissions")
-                .setMessage("LocoQuest needs your location to provide accurate directions. Please grant location permissions in settings.")
-                .setPositiveButton("Open Settings") { _, _ ->
-                    startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                        Uri.fromParts("package", packageName, null)))
-                }.show()
+        when(requestCode) {
+            MY_PERMISSIONS_REQUEST_LOCATION -> {
+                if (grantResults[0] == 0) {
+                    home.startLocationUpdates()
+                    home.updateCameraWithLastLocation(false)
+                } else if (grantResults[0] == -1 && grantResults[1] == -1) {
+                    AlertDialog.Builder(this)
+                        .setTitle("Location Permissions")
+                        .setMessage("LocoQuest needs your location to provide accurate directions. Please grant location permissions in settings.")
+                        .setPositiveButton("Open Settings") { _, _ ->
+                            startActivity(
+                                Intent(
+                                    android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.fromParts("package", packageName, null)
+                                )
+                            )
+                        }.show()
+                }
+            }
+            NOTIFICATIONS_REQUEST_CODE -> if(grantResults[0] == 0) home.onNotificationsEnabled()
         }
     }
 
@@ -418,6 +425,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 1
         const val REQ_ONE_TAP = 2
+        const val NOTIFICATIONS_REQUEST_CODE = 3
         private val TAG: String = MainActivity::class.java.name
     }
 }

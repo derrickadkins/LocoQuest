@@ -3,6 +3,7 @@ package com.locoquest.app
 import BenchmarkService
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -12,6 +13,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -24,6 +26,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.getSystemService
@@ -180,13 +183,27 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             val benchmark = markerToBenchmark[selectedMarker]!!
             val notify = benchmark.notify
             benchmark.notify = !notify
-            notifyFab.setImageResource(if(benchmark.notify)R.drawable.notifications_active else R.drawable.notifications_off)
-
-            if(collected(benchmark)) scheduleNotification(requireContext(), benchmark)
             user.visited[benchmark.pid] = benchmark
             user.update()
 
-            if(!benchmark.notify) cancelNotification(requireContext(), benchmark)
+            if(benchmark.notify){
+                val notificationManger = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    !notificationManger.areNotificationsEnabled()) {
+                    ActivityCompat.requestPermissions(
+                        requireActivity(),
+                        arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                        MainActivity.NOTIFICATIONS_REQUEST_CODE
+                    )
+                    return@setOnClickListener
+                }
+
+                if(collected(benchmark)) scheduleNotification(requireContext(), benchmark)
+                notifyFab.setImageResource(R.drawable.notifications_active)
+            }else{
+                cancelNotification(requireContext(), benchmark)
+                notifyFab.setImageResource(R.drawable.notifications_off)
+            }
         }
 
         return view
@@ -714,6 +731,12 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             }
             monitoringBoost = false
         }.start()
+    }
+
+    fun onNotificationsEnabled(){
+        val benchmark = markerToBenchmark[selectedMarker]!!
+        if(collected(benchmark)) scheduleNotification(requireContext(), benchmark)
+        notifyFab.setImageResource(R.drawable.notifications_active)
     }
 
     private fun prefs(): SharedPreferences {
