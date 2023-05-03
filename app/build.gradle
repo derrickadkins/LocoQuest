@@ -6,14 +6,14 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.locoquest.app"
         minSdk 23 // android 6.0
-        targetSdk 32
-        versionCode 16
-        versionName "2.8"
+        targetSdk 33
+        versionCode 17
+        versionName "2.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
