@@ -25,7 +25,7 @@ private const val TOAST_TEXT = "Test ads are being shown. " +
 class RadiusBoosterAdMobActivity : AppCompatActivity() {
 
     private var interstitialAd: RewardedAd? = null
-    private val TAG = "RadiusBoosterAdMobActiv"
+    private val TAG = "RadiusBoosterAdMobActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +37,7 @@ class RadiusBoosterAdMobActivity : AppCompatActivity() {
         loadInterstitialAd()
 
         // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
-        Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
+        //Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -54,17 +54,17 @@ class RadiusBoosterAdMobActivity : AppCompatActivity() {
 
     private fun loadInterstitialAd() {
         val adRequest = AdRequest.Builder().build()
-        RewardedAd.load(this, getString(R.string.reward_ad_unit_id_test), adRequest,
+        RewardedAd.load(this, getString(R.string.radius_booster_reward_ad_unit_id), adRequest,
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
                     // The interstitialAd reference will be null until
                     // an ad is loaded.
                     interstitialAd = ad
-                    Toast.makeText(
+                    /*Toast.makeText(
                         this@RadiusBoosterAdMobActivity,
                         "onAdLoaded()",
                         Toast.LENGTH_SHORT
-                    ).show()
+                    ).show()*/
                     showInterstitial()
 
                     ad.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -73,7 +73,7 @@ class RadiusBoosterAdMobActivity : AppCompatActivity() {
                             // Make sure to set your reference to null so you don't
                             // show it a second time.
                             interstitialAd = null
-                            Log.d(TAG, "The ad was dismissed.")
+                            //Log.d(TAG, "The ad was dismissed.")
                         }
 
                         override fun onAdFailedToShowFullScreenContent(adError: AdError) {
@@ -86,7 +86,7 @@ class RadiusBoosterAdMobActivity : AppCompatActivity() {
 
                         override fun onAdShowedFullScreenContent() {
                             // Called when fullscreen content is shown.
-                            Log.d(TAG, "The ad was shown.")
+                            ///Log.d(TAG, "The ad was shown.")
                         }
                     }
                 }
@@ -104,7 +104,7 @@ class RadiusBoosterAdMobActivity : AppCompatActivity() {
                     )
                     Toast.makeText(
                         this@RadiusBoosterAdMobActivity,
-                        "onAdFailedToLoad() with error: $error", Toast.LENGTH_SHORT
+                        "Ad Failed to Load", Toast.LENGTH_SHORT
                     )
                         .show()
                 }
