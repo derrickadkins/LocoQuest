@@ -3,6 +3,7 @@ package com.locoquest.app
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.InputType
@@ -16,6 +17,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setPadding
@@ -28,6 +30,8 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.locoquest.app.AppModule.Companion.guest
 import com.locoquest.app.dto.Benchmark
 import com.locoquest.app.dto.User
+import kotlin.math.exp
+import kotlin.math.roundToInt
 
 
 class Profile(private val user: User,
@@ -110,6 +114,12 @@ class Profile(private val user: User,
         view.findViewById<TextView>(R.id.friends_tv).setOnClickListener {
             FriendsActivity.user = user
             startActivity(Intent(context, FriendsActivity::class.java))
+        }
+
+        val experience = view.findViewById<ProgressBar>(R.id.experience)
+        experience.progress = Level.getProgress(user.level, user.experience)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            experience.tooltipText = "${user.experience}/${Level.getLimits(user.level).second}"
         }
 
         view.findViewById<FrameLayout>(R.id.profile_bg).setOnTouchListener { _, _ -> true }

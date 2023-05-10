@@ -19,6 +19,8 @@ data class User(
     var displayName: String = "",
     var photoUrl: String = "",
     var balance: Long = 0,
+    var experience: Int = 0,
+    var level: Int = 1,
     var lastRadiusBoost: Timestamp = Timestamp(0,0),
     val visited: HashMap<String, Benchmark> = HashMap(),
     val friends: ArrayList<String> = ArrayList()
@@ -43,6 +45,8 @@ data class User(
                 "name" to displayName,
                 "photoUrl" to photoUrl,
                 "balance" to balance,
+                "experience" to experience,
+                "level" to level,
                 "lastRadiusBoost" to lastRadiusBoost,
                 "visited" to visitedList.toList(),
                 "friends" to friends.toList()

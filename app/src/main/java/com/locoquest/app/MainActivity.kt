@@ -365,6 +365,12 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
                         val balance = if (it["balance"] == null) user.balance
                         else max(user.balance, it["balance"] as Long)
 
+                        val experience = if(it["experience"] == null) user.experience
+                        else max(user.experience, it["experience"] as Int)
+
+                        val level = if(it["level"] == null) user.level
+                        else max(user.level, it["level"] as Int)
+
                         var visited = HashMap<String, Benchmark>()
                         val visitedList =
                             if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
@@ -394,6 +400,8 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
                             name,
                             photoUrl,
                             balance,
+                            experience,
+                            level,
                             lastRadiusBoost,
                             visited,
                             friends
