@@ -313,6 +313,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                 markerToBenchmark[marker] = benchmark
                 user.visited[benchmark.pid] = benchmark
                 user.balance++
+                user.experience++
                 balance.text = user.balance.toString()
                 user.update()
                 marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.hour_glass_6))
