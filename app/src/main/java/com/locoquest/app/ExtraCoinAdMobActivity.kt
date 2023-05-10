@@ -53,7 +53,7 @@ class ExtraCoinAdMobActivity : AppCompatActivity() {
 
     private fun loadRewardAd() {
         val adRequest = AdRequest.Builder().build()
-        RewardedAd.load(this, getString(R.string.extra_coin_reward_ad_unit_id), adRequest,
+        RewardedAd.load(this, getString(R.string.reward_ad_unit_id_test), adRequest,
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
                     // The interstitialAd reference will be null until
