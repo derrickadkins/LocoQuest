@@ -36,7 +36,7 @@ class ExtraCoinAdMobActivity : AppCompatActivity() {
         loadRewardAd()
 
         // Toasts the test ad message on the screen. Remove this after defining your own ad unit ID.
-        Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
+        //Toast.makeText(this, TOAST_TEXT, Toast.LENGTH_LONG).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -53,13 +53,13 @@ class ExtraCoinAdMobActivity : AppCompatActivity() {
 
     private fun loadRewardAd() {
         val adRequest = AdRequest.Builder().build()
-        RewardedAd.load(this, getString(R.string.reward_ad_unit_id_test), adRequest,
+        RewardedAd.load(this, getString(R.string.extra_coin_reward_ad_unit_id), adRequest,
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
                     // The interstitialAd reference will be null until
                     // an ad is loaded.
                     rewardedAd = ad
-                    Toast.makeText(this@ExtraCoinAdMobActivity, "onAdLoaded()", Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this@ExtraCoinAdMobActivity, "onAdLoaded()", Toast.LENGTH_SHORT).show()
                     showInterstitial()
 
                     ad.fullScreenContentCallback = object : FullScreenContentCallback() {
@@ -68,7 +68,7 @@ class ExtraCoinAdMobActivity : AppCompatActivity() {
                             // Make sure to set your reference to null so you don't
                             // show it a second time.
                             rewardedAd = null
-                            Log.d(TAG, "The ad was dismissed.")
+                            //Log.d(TAG, "The ad was dismissed.")
                             finish()
                         }
 
@@ -83,7 +83,7 @@ class ExtraCoinAdMobActivity : AppCompatActivity() {
 
                         override fun onAdShowedFullScreenContent() {
                             // Called when fullscreen content is shown.
-                            Log.d(TAG, "The ad was shown.")
+                            //Log.d(TAG, "The ad was shown.")
                             finish()
                         }
                     }
@@ -102,7 +102,7 @@ class ExtraCoinAdMobActivity : AppCompatActivity() {
                     )
                     Toast.makeText(
                         this@ExtraCoinAdMobActivity,
-                        "onAdFailedToLoad() with error: $error", Toast.LENGTH_SHORT
+                        "Ad Failed to Load", Toast.LENGTH_SHORT
                     )
                         .show()
                 }
