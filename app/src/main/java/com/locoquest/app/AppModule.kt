@@ -3,9 +3,13 @@ package com.locoquest.app
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.job.JobInfo
+import android.app.job.JobScheduler
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.PersistableBundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import com.locoquest.app.dao.DB
@@ -23,28 +27,32 @@ class AppModule {
         const val DEBUG = false
         val SECONDS_TO_RECOLLECT = if(DEBUG) 30 else 14400 // 4 hrs
 
-        fun scheduleNotification(context: Context, benchmark: Benchmark){
-            Log.d("notify", "scheduling notification for ${benchmark.name}")
+        fun scheduleNotification(context: Context, benchmark: Benchmark) {
+            val extras = PersistableBundle()
+            extras.putString("pid", benchmark.pid)
+            extras.putString("name", benchmark.name)
+            val delayMillis = System.currentTimeMillis() - benchmark.lastVisited * 1000 + SECONDS_TO_RECOLLECT
+            val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            val jobInfoBuilder = JobInfo.Builder(benchmark.pid.hashCode(), ComponentName(context, NotifyReceiver::class.java))
+                .setMinimumLatency(delayMillis)
+                .setOverrideDeadline(delayMillis + 1000)
+                .setPersisted(true)
+                .setExtras(extras)
 
-            val notificationIntent = Intent(context, NotifyReceiver::class.java)
-                .putExtra("pid", benchmark.pid)
-                .putExtra("name", benchmark.name)
-            val pendingIntent = PendingIntent.getBroadcast(context, benchmark.pid.hashCode(), notificationIntent, PendingIntent.FLAG_IMMUTABLE/* or PendingIntent.FLAG_UPDATE_CURRENT*/)
-            val ms = 1000 * (benchmark.lastVisited + SECONDS_TO_RECOLLECT)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                jobInfoBuilder.setExpedited(true)
+            }
 
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, ms, pendingIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                jobInfoBuilder.setPriority(JobInfo.PRIORITY_MAX)
+            }
+
+            jobScheduler.schedule(jobInfoBuilder.build())
         }
 
-        fun cancelNotification(context: Context, benchmark: Benchmark){
-            Log.d("notify", "cancelling notification for ${benchmark.name}")
-            val notificationIntent = Intent(context, NotifyReceiver::class.java)
-                .putExtra("pid", benchmark.pid)
-                .putExtra("name", benchmark.name)
-            val pendingIntent = PendingIntent.getBroadcast(context, benchmark.pid.hashCode(), notificationIntent, PendingIntent.FLAG_IMMUTABLE/* or PendingIntent.FLAG_UPDATE_CURRENT*/)
-
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.cancel(pendingIntent)
+        fun cancelNotification(context: Context, benchmark: Benchmark) {
+            val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            jobScheduler.cancel(benchmark.pid.hashCode())
         }
     }
 }
