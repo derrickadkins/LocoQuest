@@ -116,10 +116,13 @@ class Profile(private val user: User,
             startActivity(Intent(context, FriendsActivity::class.java))
         }
 
+        val lvlProgression = view.findViewById<TextView>(R.id.lvlProgression)
+        lvlProgression.text = "${user.experience}/${Level.getLimits(user.level).second}"
+
         val experience = view.findViewById<ProgressBar>(R.id.experience)
         experience.progress = Level.getProgress(user.level, user.experience)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            experience.tooltipText = "${user.experience}/${Level.getLimits(user.level).second}"
+            experience.tooltipText = lvlProgression.text
         }
 
         view.findViewById<FrameLayout>(R.id.profile_bg).setOnTouchListener { _, _ -> true }

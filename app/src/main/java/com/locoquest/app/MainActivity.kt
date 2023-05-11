@@ -366,10 +366,10 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
                         else max(user.balance, it["balance"] as Long)
 
                         val experience = if(it["experience"] == null) user.experience
-                        else max(user.experience, it["experience"] as Int)
+                        else max(user.experience, it["experience"] as Long)
 
                         val level = if(it["level"] == null) user.level
-                        else max(user.level, it["level"] as Int)
+                        else max(user.level, it["level"] as Long)
 
                         var visited = HashMap<String, Benchmark>()
                         val visitedList =

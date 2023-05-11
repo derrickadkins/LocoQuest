@@ -19,8 +19,8 @@ data class User(
     var displayName: String = "",
     var photoUrl: String = "",
     var balance: Long = 0,
-    var experience: Int = 0,
-    var level: Int = 1,
+    var experience: Long = 0,
+    var level: Long = 1,
     var lastRadiusBoost: Timestamp = Timestamp(0,0),
     val visited: HashMap<String, Benchmark> = HashMap(),
     val friends: ArrayList<String> = ArrayList()

@@ -87,6 +87,8 @@ class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongCl
                 val name = if(it["name"] == null) "" else it["name"] as String
                 val photoUrl = if(it["photoUrl"] == null) "" else it["photoUrl"] as String
                 val balance = if(it["balance"] == null) 0L else it["balance"] as Long
+                val experience = if(it["experience"] == null) 0 else it["experience"] as Long
+                val level = if(it["level"] == null) 1 else it["level"] as Long
                 val lastRadiusBoost = if(it["lastRadiusBoost"] == null) Timestamp(0,0)
                                       else it["lastRadiusBoost"] as Timestamp
 
@@ -104,7 +106,7 @@ class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongCl
 
                 val friends = if(it["friends"] == null) ArrayList() else it["friends"] as ArrayList<String>
 
-                val friend = User(uid, name, photoUrl, balance, lastRadiusBoost, visited, friends)
+                val friend = User(uid, name, photoUrl, balance, experience, level, lastRadiusBoost, visited, friends)
 
                 profile = Profile(friend, false, this, this)
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, profile!!).commit()

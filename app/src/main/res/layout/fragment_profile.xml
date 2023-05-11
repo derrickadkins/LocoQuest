@@ -1,4 +1,5 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/semi_transparent_white"
     android:id="@+id/profile_bg"
     android:layout_width="match_parent"
@@ -7,8 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/rounded_corners_bg"
-    android:layout_margin="12dp"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:layout_margin="12dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -32,25 +32,28 @@
             android:layout_height="wrap_content"/>
 
         <androidx.appcompat.widget.LinearLayoutCompat
-            android:gravity="center_vertical"
-            android:padding="8dp"
-            android:layout_margin="8dp"
-            android:layout_below="@id/titleTextView"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_below="@id/titleTextView"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center_vertical"
+            android:padding="8dp">
 
             <ImageView
-                android:src="@drawable/coin"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:src="@drawable/coin" />
 
             <TextView
                 android:id="@+id/profile_balance"
-                android:text="0"
-                android:layout_marginStart="8dp"
-                android:textSize="24sp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="0"
+                android:textSize="24sp" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
 
@@ -64,6 +67,16 @@
             android:layout_marginTop="24dp"
             android:background="@drawable/profile_picture_background"
             android:contentDescription="@string/todo" />
+
+        <TextView
+            android:id="@+id/lvlProgression"
+            android:text="350/400"
+            android:layout_alignTop="@id/profileImageView"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="16dp"
+            android:textSize="18dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
         <!-- Name TextView -->
         <TextView

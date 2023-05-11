@@ -1,6 +1,6 @@
 package com.locoquest.app
 
-enum class Level(val level: Int, val upperLimit: Int) {
+enum class Level(val level: Long, val upperLimit: Long) {
     LEVEL_1(1, 100),
     LEVEL_2(2, 200),
     LEVEL_3(3, 300),
@@ -13,23 +13,23 @@ enum class Level(val level: Int, val upperLimit: Int) {
     LEVEL_10(10, 1000);
 
     companion object {
-        fun getLimits(levelNumber: Int): Pair<Int, Int> {
-            val lowerLimit = if (levelNumber == 1) 0 else getLimits(levelNumber - 1).second
+        fun getLimits(levelNumber: Long): Pair<Long, Long> {
+            val lowerLimit = if (levelNumber == 1L) 0 else getLimits(levelNumber - 1).second
             val upperLimit = values().find { it.level == levelNumber }?.upperLimit ?: -1
             return Pair(lowerLimit + 1, upperLimit)
         }
 
-        fun getPointSpread(levelNumber: Int): Int {
+        private fun getPointSpread(levelNumber: Long): Long {
             val (lowerLimit, upperLimit) = getLimits(levelNumber)
-            return upperLimit - lowerLimit + 1
+            return upperLimit - lowerLimit + 1L
         }
 
-        fun getProgress(levelNumber: Int, experiencePoints: Int): Int {
+        fun getProgress(levelNumber: Long, experiencePoints: Long): Int {
             val (_, upperLimit) = Level.getLimits(levelNumber)
             val pointsToNextLevel = upperLimit - experiencePoints
             val pointSpread = Level.getPointSpread(levelNumber)
 
-            return ((pointSpread - pointsToNextLevel) / pointSpread) * 100
+            return (((pointSpread - pointsToNextLevel) / pointSpread) * 100).toInt()
         }
     }
 }
