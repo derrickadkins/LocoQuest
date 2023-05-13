@@ -6,9 +6,11 @@ import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentSender
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.location.Location
 import android.location.LocationManager
 import android.net.ConnectivityManager
@@ -24,12 +26,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import com.bumptech.glide.request.target.CustomTarget
+import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -49,6 +57,10 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.locoquest.app.AppModule.Companion.BOOSTED_DURATION
 import com.locoquest.app.AppModule.Companion.DEBUG
 import com.locoquest.app.AppModule.Companion.SECONDS_TO_RECOLLECT
@@ -57,11 +69,16 @@ import com.locoquest.app.AppModule.Companion.scheduleNotification
 import com.locoquest.app.AppModule.Companion.user
 import com.locoquest.app.Converters.Companion.toMarkerOptions
 import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.User
 import java.net.UnknownHostException
+import kotlin.math.max
 
-class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener{
+class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
+    ISecondaryFragment, Profile.ProfileListener {
 
     var selectedBenchmark: Benchmark? = null
+    private var switchingUser = false
+    private var profile: Profile? = null
     lateinit var balance: TextView
     private var googleMap: GoogleMap? = null
     private var circle: Circle? = null
@@ -76,9 +93,13 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private var markerToBenchmark: HashMap<Marker, Benchmark> = HashMap()
     private var benchmarkToMarker: HashMap<Benchmark, Marker> = HashMap()
     private lateinit var notifyFab: FloatingActionButton
+    private lateinit var userImg: ImageView
     private lateinit var offlineImg: ImageView
     private lateinit var mushroom: ImageView
     private lateinit var timerTxt: TextView
+    private lateinit var userLvl: TextView
+    private lateinit var userName: TextView
+    private lateinit var userExperience: ProgressBar
     private lateinit var layersLayout: LinearLayout
     private lateinit var layersFab: FloatingActionButton
     private lateinit var myLocation: FloatingActionButton
@@ -137,7 +158,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         layersLayout = view.findViewById(R.id.layers_layout)
         layersFab = view.findViewById(R.id.layersFab)
         layersFab.setOnClickListener { layersLayout.visibility = if(layersLayout.visibility == View.GONE) View.VISIBLE else View.GONE }
-        layersFab.visibility = if(selectedMarker == null) View.VISIBLE else View.GONE
+        //layersFab.visibility = if(selectedMarker == null) View.VISIBLE else View.GONE
 
         val layersClickListener = View.OnClickListener {
             Log.d("tracker", "layer selected")
@@ -167,8 +188,20 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         offlineImg = view.findViewById(R.id.offline_img)
         updateNetworkStatus()
 
+        val openProfileClickListener = View.OnClickListener {
+            profile = Profile(user, true, this, this)
+            activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.secondary_container, profile!!)?.commit()
+        }
+        userImg = view.findViewById(R.id.user_image)
+        userImg.setOnClickListener(openProfileClickListener)
+        userName = view.findViewById(R.id.user_display_name)
+        userName.setOnClickListener(openProfileClickListener)
+        userLvl = view.findViewById(R.id.user_level)
+        userLvl.setOnClickListener(openProfileClickListener)
+        userExperience = view.findViewById(R.id.user_exp)
+        userExperience.setOnClickListener(openProfileClickListener)
         balance = view.findViewById(R.id.balance)
-        balance.text = user.balance.toString()
+        displayUserInfo()
 
         mushroom = view.findViewById(R.id.mushroom)
         mushroom.setOnClickListener { homeListener.onMushroomClicked() }
@@ -251,6 +284,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     override fun onMapReady(map: GoogleMap) {
         Log.d("tracker", "map is ready")
         googleMap = map
+        map.uiSettings.isScrollGesturesEnabled = false
+        map.uiSettings.isZoomGesturesEnabled = false
+        map.uiSettings.isRotateGesturesEnabled = false
+        map.uiSettings.isTiltGesturesEnabled = false
         map.mapType = mapType()
         map.setOnMarkerClickListener(this)
         map.setOnCameraIdleListener {
@@ -264,10 +301,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             notifyFab.visibility = View.GONE
             layersLayout.visibility = View.GONE
             monitoringSelectedMarker = false
-            Thread{
+            /*Thread{
                 Thread.sleep(500) // wait for direction btn to hide
                 Handler(Looper.getMainLooper()).post{layersFab.visibility = View.VISIBLE}
-            }.start()
+            }.start()*/
         }
         map.setOnCameraMoveStartedListener {
             Log.d("tracker", "camera started moving: tracking:$tracking")
@@ -285,11 +322,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     override fun onMarkerClick(marker: Marker): Boolean {
         Log.d("tracker", "marker clicked on")
-
+        marker.showInfoWindow()
         selectedMarker = marker
-        layersFab.visibility = View.GONE
-        layersLayout.visibility = View.GONE
-        updateTrackingStatus(false)
+        //layersFab.visibility = View.GONE
+        //layersLayout.visibility = View.GONE
+        //updateTrackingStatus(false)
 
         if(!markerToBenchmark.contains(marker)) return true
         val benchmark = markerToBenchmark[marker]!!
@@ -314,6 +351,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                 user.balance++
                 user.experience++
                 balance.text = user.balance.toString()
+                updateProgress()
                 user.update()
                 marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.hour_glass_6))
                 marker.snippet = "Collected ${Converters.formatSeconds(benchmark.lastVisited)}"
@@ -330,7 +368,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         // Return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur (which is for the camera to move such that the
         // marker is centered and for the marker's info window to open, if it has one).
-        return false
+        return true
     }
 
     private fun scheduleSetMarkerIcon(marker: Marker, benchmark: Benchmark){
@@ -342,6 +380,214 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                 Log.e("marker set icon", e.toString())
             }
         }, (SECONDS_TO_RECOLLECT * 1000 / 7).toLong())
+    }
+
+    override fun onClose(fragment: Fragment) {
+        activity?.supportFragmentManager?.beginTransaction()?.remove(fragment)?.commit()
+        if(user.isBoosted()) monitorBoostedTimer()
+        balance.text = user.balance.toString()
+    }
+
+    override fun onBenchmarkClicked(benchmark: Benchmark) {
+        Log.d("event", "onBenchmarkClicked")
+        hideProfile()
+        selectedBenchmark = benchmark
+        loadMarkers(false)
+    }
+
+    override fun onLogin() {
+        try {
+            Log.d("event", "MainActivity.onLogin")
+
+            val signUpRequest = BeginSignInRequest.builder()
+                .setGoogleIdTokenRequestOptions(
+                    BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
+                        .setSupported(true)
+                        // Your server's client ID, not your Android client ID.
+                        .setServerClientId(getString(R.string.web_client_id))
+                        // Show all accounts on the device.
+                        .setFilterByAuthorizedAccounts(false)
+                        .build()
+                )
+                .build()
+
+            Identity.getSignInClient(requireActivity()).beginSignIn(signUpRequest)
+                .addOnSuccessListener(requireActivity()) { result ->
+                    try {
+                        activity?.startIntentSenderForResult(
+                            result.pendingIntent.intentSender, MainActivity.REQ_ONE_TAP,
+                            null, 0, 0, 0, null
+                        )
+                    } catch (e: IntentSender.SendIntentException) {
+                        Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
+                    }
+                }
+                .addOnFailureListener(requireActivity()) { e ->
+                    // No Google Accounts found. Just continue presenting the signed-out UI.
+                    e.localizedMessage?.let { it1 -> Log.d(TAG, it1) }
+                }
+        } catch (ex: java.lang.Exception) {
+            ex.localizedMessage?.let { Log.d(TAG, it) }
+        }
+    }
+
+    override fun onSignOut() {
+        Log.d("event", "onSignOut")
+        Firebase.auth.signOut()
+        userImg.setImageResource(R.drawable.account)
+        user = AppModule.guest
+        switchUser()
+    }
+
+    private fun displayUserInfo() {
+        if (user.displayName == "") {
+            user.displayName = Firebase.auth.currentUser?.displayName.toString()
+        }
+
+        balance.text = user.balance.toString()
+        userLvl.text = user.level.toString()
+        userName.text = user.displayName
+        updateProgress()
+
+        Glide.with(this)
+            .load(user.photoUrl)
+            .transform(CircleCrop())
+            .into(object : CustomTarget<Drawable>() {
+                override fun onResourceReady(
+                    drawable: Drawable,
+                    transition: com.bumptech.glide.request.transition.Transition<in Drawable>?
+                ) {
+                    userImg.setImageDrawable(drawable)
+                }
+
+                override fun onLoadCleared(placeholder: Drawable?) {}
+            })
+    }
+
+    private fun updateProgress(){
+        userExperience.progress = Level.getProgress(user.level, user.experience)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            userExperience.tooltipText = "${user.experience}/${Level.getLimits(user.level).second}"
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun switchUser() {
+        if (switchingUser) return
+        Thread {
+            switchingUser = true
+            val userDao = AppModule.db!!.localUserDAO()
+            val tmpUser = userDao.getUser(user.uid)
+
+            if (tmpUser == null) {
+                userDao.insert(user)
+            } else user = tmpUser
+
+            Log.d("user", "user loaded from db; ${user.dump()}")
+
+            Handler(Looper.getMainLooper()).post {
+                userName.text = user.displayName
+                hideProfile()
+
+                if (user.uid == AppModule.guest.uid) {
+                    loadMarkers(true)
+                    displayUserInfo()
+                    Log.d("user", "user switched; ${user.dump()}")
+                    switchingUser = false
+                    return@post
+                }
+
+                Firebase.firestore.collection("users").document(user.uid)
+                    .get()
+                    .addOnSuccessListener {
+                        if (it.data == null) {
+                            user.push()
+                            return@addOnSuccessListener
+                        }
+                        Log.d(TAG, "${it.id} => ${it.data}")
+
+                        val name =
+                            if (it["name"] == null) user.displayName else it["name"] as String
+
+                        val photoUrl = if (it["photoUrl"] == null) {
+                            user.photoUrl = Firebase.auth.currentUser?.photoUrl.toString()
+                            user.photoUrl
+                        } else it["photoUrl"] as String
+
+                        val lastRadiusBoost =
+                            if (it["lastRadiusBoost"] == null) user.lastRadiusBoost
+                            else {
+                                val tmpVal = it["lastRadiusBoost"] as Timestamp
+                                if (tmpVal.seconds > user.lastRadiusBoost.seconds) tmpVal
+                                else user.lastRadiusBoost
+                            }
+
+                        val balance = if (it["balance"] == null) user.balance
+                        else max(user.balance, it["balance"] as Long)
+
+                        val experience = if(it["experience"] == null) user.experience
+                        else max(user.experience, it["experience"] as Long)
+
+                        val level = if(it["level"] == null) user.level
+                        else max(user.level, it["level"] as Long)
+
+                        var visited = HashMap<String, Benchmark>()
+                        val visitedList =
+                            if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
+                        visitedList.forEach { x ->
+                            val pid = x["pid"] as String
+                            val lastVisited = if(x["lastVisited"] == null) Timestamp(0,0) else x["lastVisited"] as Timestamp
+                            val notify = if(x["notify"] == null) false else x["notify"] as Boolean
+
+                            visited[pid] = Benchmark.new(
+                                pid,
+                                x["name"] as String,
+                                x["location"] as GeoPoint,
+                                lastVisited,
+                                notify
+                            )
+                        }
+                        if (visited.isNotEmpty() && user.visited.isNotEmpty() &&
+                            visited.values.sortedByDescending { x -> x.lastVisited }[0].lastVisited < user.visited.values.sortedByDescending { x -> x.lastVisited }[0].lastVisited
+                        )
+                            visited = user.visited
+
+                        val friends =
+                            if (it["friends"] == null) ArrayList() else it["friends"] as ArrayList<String>
+
+                        user = User(
+                            user.uid,
+                            name,
+                            photoUrl,
+                            balance,
+                            experience,
+                            level,
+                            lastRadiusBoost,
+                            visited,
+                            friends
+                        )
+                        user.update()
+                        loadMarkers(true)
+                    }
+                    .addOnFailureListener {
+                        Log.d(TAG, it.toString())
+                        user.push()
+                        loadMarkers(true)
+                    }.addOnCompleteListener {
+                        //home.balance.text = user.balance.toString()
+                        displayUserInfo()
+                        Log.d("user", "user switched; ${user.dump()}")
+                        switchingUser = false
+                    }
+            }
+        }.start()
+    }
+
+    private fun hideProfile(){
+        if(profile != null){
+            activity?.supportFragmentManager?.beginTransaction()?.remove(profile!!)?.commit()
+            profile = null
+        }
     }
 
     private fun toCountdownFormat(seconds: Long): String {
@@ -397,6 +643,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         )
     }
 
+    // Chat-GPT wrote this function
     private fun inProximity(meters: Double, latlng1: LatLng, latlng2: LatLng): Boolean {
         val R = 6371e3 // Earth's radius in meters
         val φ1 = Math.toRadians(latlng1.latitude)
@@ -771,7 +1018,9 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     companion object{
+        private const val TAG = "Home"
         private const val DEFAULT_ZOOM = 15f
+        private const val MIN_ZOOM = 14f
         private const val TRACKING_INTERVAL = 5000L
         private const val TRACKING_FASTEST_INTERVAL = 1000L
         private const val CAMERA_ANIMATION_DURATION = 2000

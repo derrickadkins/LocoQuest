@@ -17,7 +17,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.Menu
-import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -35,6 +34,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -48,17 +48,11 @@ import com.locoquest.app.dto.User
 import kotlin.math.max
 
 
-class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileListener, Home.HomeListener,
+class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
     CoinCollectedDialog.IWatchAdButtonClickListener {
 
     private val auth = FirebaseAuth.getInstance()
-    private lateinit var oneTapClient: SignInClient
-    private lateinit var signUpRequest: BeginSignInRequest
-    private lateinit var menu: Menu
     private lateinit var home: Home
-    private var profile: Profile? = null
-    private var switchingUser = false
-    private val fDb = Firebase.firestore
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,27 +63,13 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
         home = Home(this)
         supportFragmentManager.beginTransaction().replace(R.id.primary_container, home).commit()
 
-        // Firebase Sign-in
-        oneTapClient = Identity.getSignInClient(this)
-        signUpRequest = BeginSignInRequest.builder()
-            .setGoogleIdTokenRequestOptions(
-                BeginSignInRequest.GoogleIdTokenRequestOptions.builder()
-                    .setSupported(true)
-                    // Your server's client ID, not your Android client ID.
-                    .setServerClientId(getString(R.string.web_client_id))
-                    // Show all accounts on the device.
-                    .setFilterByAuthorizedAccounts(false)
-                    .build()
-            )
-            .build()
-
         Thread{
             db = Room.databaseBuilder(this, DB::class.java, "db")
                 .fallbackToDestructiveMigration().build()
             if (auth.currentUser != null)
                 user = User(auth.currentUser!!.uid)
             Log.d("user", "Database loaded, switching to user:${user.uid}")
-            switchUser()
+            home.switchUser()
         }.start()
     }
 
@@ -141,7 +121,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
         when (requestCode) {
             REQ_ONE_TAP -> {
                 try {
-                    val credential = oneTapClient.getSignInCredentialFromIntent(data)
+                    val credential = Identity.getSignInClient(this).getSignInCredentialFromIntent(data)
                     val idToken = credential.googleIdToken
                     if (idToken != null) {
                         val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
@@ -151,7 +131,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
                                     user = User(auth.currentUser!!.uid,
                                         auth.currentUser!!.displayName!!,
                                         auth.currentUser!!.photoUrl.toString())
-                                    switchUser()
+                                    home.switchUser()
                                     Log.d(TAG, "signInWithCredential:success")
                                 } else {
                                     Log.w(TAG, "signInWithCredential:failure", task.exception)
@@ -180,48 +160,12 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
         }
     }
 
-    /**
-     * Function: onCreateOptionsMenu
-     * Description: Override function to create options menu.
-     * @param menu: The menu object.
-     * @return: Boolean value indicating if the menu creation was successful.
-     */
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        Log.d("event", "MainActivity.onCreateOptionsMenu")
-        this.menu = menu
-        menuInflater.inflate(R.menu.main, menu)
-        displayUserInfo()
-        return true
-    }
-
-    /**
-     * Function: onOptionsItemSelected
-     * Description: Override function to handle options item selection.
-     * @param item: The selected menu item.
-     * @return: Boolean value indicating if the item selection was handled successfully.
-     */
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        Log.d("event", "MainActivity.onOptionsItemSelected")
-        return when (item.itemId) {
-            R.id.menu_item_account -> {
-                if (profile == null) {
-                    profile = Profile(user, true,this, this)
-                    supportFragmentManager.beginTransaction().replace(R.id.secondary_container, profile!!).commit()
-                } else {
-                    hideProfile()
-                }
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    override fun onBenchmarkClicked(benchmark: Benchmark) {
+    /*override fun onBenchmarkClicked(benchmark: Benchmark) {
         Log.d("event", "MainActivity.onBenchmarkClicked")
         hideProfile()
         home.selectedBenchmark = benchmark
         home.loadMarkers(false)
-    }
+    }*/
 
     override fun onCoinCollected(benchmark: Benchmark) {
         Log.d("event", "MainActivity.onCoinCollected")
@@ -235,7 +179,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
         startActivity(Intent(this, ExtraCoinAdMobActivity::class.java))
     }
 
-    override fun onLogin() {
+    /*override fun onLogin() {
         try {
             Log.d("event", "MainActivity.onLogin")
             oneTapClient.beginSignIn(signUpRequest)
@@ -269,7 +213,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
             user = guest
             switchUser()
         }
-    }
+    }*/
 
     override fun onClose(fragment: Fragment) {
         Log.d("event", "MainActivity.onClose")
@@ -283,7 +227,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
         supportFragmentManager.beginTransaction().replace(R.id.secondary_container, Store(this)).commit()
     }
 
-    private fun displayUserInfo() {
+    /*private fun displayUserInfo() {
         if (user.displayName == "") {
             user.displayName = auth.currentUser?.displayName.toString()
         }
@@ -337,7 +281,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
                     return@post
                 }
 
-                fDb.collection("users").document(user.uid)
+                Firebase.firestore.collection("users").document(user.uid)
                     .get()
                     .addOnSuccessListener {
                         if (it.data == null) {
@@ -428,7 +372,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Profile.ProfileLis
             supportFragmentManager.beginTransaction().remove(profile!!).commit()
             profile = null
         }
-    }
+    }*/
 
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 1

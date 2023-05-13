@@ -61,7 +61,7 @@
             android:name=".FriendsActivity"
             android:exported="true"
             android:parentActivityName=".MainActivity" />
-        
+
         <service android:name=".NotifyService"
             android:exported="true"
             android:enabled="true"

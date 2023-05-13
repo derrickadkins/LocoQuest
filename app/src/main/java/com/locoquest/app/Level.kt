@@ -26,8 +26,8 @@ enum class Level(val level: Long, val upperLimit: Long) {
 
         fun getProgress(levelNumber: Long, experiencePoints: Long): Int {
             val (_, upperLimit) = Level.getLimits(levelNumber)
-            val pointsToNextLevel = upperLimit - experiencePoints
-            val pointSpread = Level.getPointSpread(levelNumber)
+            val pointsToNextLevel = (upperLimit - experiencePoints).toDouble()
+            val pointSpread = Level.getPointSpread(levelNumber).toDouble()
 
             return (((pointSpread - pointsToNextLevel) / pointSpread) * 100).toInt()
         }
