@@ -11,6 +11,7 @@ import com.locoquest.app.AppModule.Companion.BOOSTED_DURATION
 import com.locoquest.app.AppModule.Companion.BOOSTED_REACH
 import com.locoquest.app.AppModule.Companion.DEFAULT_REACH
 import com.locoquest.app.AppModule.Companion.db
+import com.locoquest.app.Skill
 
 @Entity
 data class User(
@@ -21,7 +22,9 @@ data class User(
     var balance: Long = 0,
     var experience: Long = 0,
     var level: Long = 1,
+    var skillPoints: Long = 0,
     var lastRadiusBoost: Timestamp = Timestamp(0,0),
+    val skills: ArrayList<Skill> = ArrayList(),
     val visited: HashMap<String, Benchmark> = HashMap(),
     val friends: ArrayList<String> = ArrayList()
 ){
@@ -32,6 +35,9 @@ data class User(
     }
 
     fun push(){
+        val skillList = ArrayList<String>()
+        skills.forEach { skillList.add(it.name) }
+
         val visitedList = ArrayList<HashMap<String, Any>>()
         visited.forEach { x -> visitedList.add(hashMapOf(
             "pid" to x.value.pid,
@@ -47,7 +53,9 @@ data class User(
                 "balance" to balance,
                 "experience" to experience,
                 "level" to level,
+                "skillPoints" to skillPoints,
                 "lastRadiusBoost" to lastRadiusBoost,
+                "skills" to skillList.toList(),
                 "visited" to visitedList.toList(),
                 "friends" to friends.toList()
             ))

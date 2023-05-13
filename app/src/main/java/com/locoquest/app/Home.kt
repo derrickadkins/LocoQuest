@@ -386,6 +386,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         activity?.supportFragmentManager?.beginTransaction()?.remove(fragment)?.commit()
         if(user.isBoosted()) monitorBoostedTimer()
         balance.text = user.balance.toString()
+        displayUserInfo()
     }
 
     override fun onBenchmarkClicked(benchmark: Benchmark) {
@@ -448,6 +449,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         userLvl.text = user.level.toString()
         userName.text = user.displayName
         updateProgress()
+
+        if(this.isDetached) return
 
         Glide.with(this)
             .load(user.photoUrl)
@@ -531,9 +534,18 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                         val level = if(it["level"] == null) user.level
                         else max(user.level, it["level"] as Long)
 
+                        val skillPoints = if(it["skillPoints"] == null) user.skillPoints
+                        else max(user.skillPoints, it["skillPoints"] as Long)
+
+                        val skills = ArrayList<Skill>()
+                        val skillList = if(it["skills"] == null) ArrayList() else it["skills"] as ArrayList<String>
+                        skillList.forEach { x->
+                            val skill = Skill.values().find { s -> s.name == x }
+                            if(skill != null) skills.add(skill)
+                        }
+
                         var visited = HashMap<String, Benchmark>()
-                        val visitedList =
-                            if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
+                        val visitedList = if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
                         visitedList.forEach { x ->
                             val pid = x["pid"] as String
                             val lastVisited = if(x["lastVisited"] == null) Timestamp(0,0) else x["lastVisited"] as Timestamp
@@ -562,7 +574,9 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                             balance,
                             experience,
                             level,
+                            skillPoints,
                             lastRadiusBoost,
+                            skills,
                             visited,
                             friends
                         )

@@ -61,4 +61,5 @@
     <string name="get_notifications">Get notifications for this coin</string>
     <string name="remove_notifications">Remove notifications for this coin</string>
     <string name="notify_tooltip">Add or Remove notifications for this coin</string>
+    <string name="level_up">Level Up</string>
 </resources>

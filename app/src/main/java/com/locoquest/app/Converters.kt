@@ -47,6 +47,17 @@ class Converters {
         return "${timestamp.seconds},${timestamp.nanoseconds}"
     }
 
+    @TypeConverter
+    fun fromSkills(skills: ArrayList<Skill>): String{
+        return gson.toJson(skills)
+    }
+
+    @TypeConverter
+    fun toSkills(json: String): ArrayList<Skill>{
+        val type = object : TypeToken<ArrayList<Skill>>(){}.type
+        return gson.fromJson(json, type)
+    }
+
     companion object {
         fun toMarkerOptions(benchmark: Benchmark): MarkerOptions {
             return MarkerOptions()

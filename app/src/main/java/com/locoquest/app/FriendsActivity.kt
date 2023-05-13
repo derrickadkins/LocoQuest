@@ -89,8 +89,16 @@ class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongCl
                 val balance = if(it["balance"] == null) 0L else it["balance"] as Long
                 val experience = if(it["experience"] == null) 0 else it["experience"] as Long
                 val level = if(it["level"] == null) 1 else it["level"] as Long
+                val skillPoints = if(it["skillPoints"] == null) 0 else it["skillPoints"] as Long
                 val lastRadiusBoost = if(it["lastRadiusBoost"] == null) Timestamp(0,0)
                                       else it["lastRadiusBoost"] as Timestamp
+
+                val skills = ArrayList<Skill>()
+                val skillList = if(it["skills"] == null) ArrayList() else it["skills"] as ArrayList<String>
+                skillList.forEach { s ->
+                    val skill = Skill.values().find { x -> x.name == s }
+                    if(skill != null) skills.add(skill)
+                }
 
                 val visited = HashMap<String, Benchmark>()
                 val visitedList = if(it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
@@ -106,7 +114,7 @@ class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongCl
 
                 val friends = if(it["friends"] == null) ArrayList() else it["friends"] as ArrayList<String>
 
-                val friend = User(uid, name, photoUrl, balance, experience, level, lastRadiusBoost, visited, friends)
+                val friend = User(uid, name, photoUrl, balance, experience, level, skillPoints, lastRadiusBoost, skills, visited, friends)
 
                 profile = Profile(friend, false, this, this)
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, profile!!).commit()

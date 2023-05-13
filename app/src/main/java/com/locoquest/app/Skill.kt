@@ -1,6 +1,6 @@
 package com.locoquest.app
 
-enum class Skills(i: Int, name: String) {
+enum class Skill(val id: Int, val text: String) {
     DRONE(0, "Drone"),
     COMPANION(1, "Companion"),
     TIME(2, "Time"),

@@ -116,13 +116,31 @@ class Profile(private val user: User,
             startActivity(Intent(context, FriendsActivity::class.java))
         }
 
+        val levelTxt = view.findViewById<TextView>(R.id.profile_level)
+        levelTxt.text = user.level.toString()
+
         val lvlProgression = view.findViewById<TextView>(R.id.lvlProgression)
         lvlProgression.text = "${user.experience}/${Level.getLimits(user.level).second}"
 
         val experience = view.findViewById<ProgressBar>(R.id.experience)
-        experience.progress = Level.getProgress(user.level, user.experience)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            experience.tooltipText = lvlProgression.text
+        fun updateProgress(){
+            experience.progress = Level.getProgress(user.level, user.experience)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                experience.tooltipText = lvlProgression.text
+            }
+        }
+        updateProgress()
+
+        val lvlUp = view.findViewById<Button>(R.id.level_up_btn)
+        lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+        lvlUp.setOnClickListener {
+            user.skillPoints++
+            user.level++
+            levelTxt.text = user.level.toString()
+            lvlProgression.text = "${user.experience}/${Level.getLimits(user.level).second}"
+            updateProgress()
+            lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+            user.update()
         }
 
         view.findViewById<FrameLayout>(R.id.profile_bg).setOnTouchListener { _, _ -> true }
