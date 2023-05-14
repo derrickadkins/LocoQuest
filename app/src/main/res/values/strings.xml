@@ -62,4 +62,6 @@
     <string name="remove_notifications">Remove notifications for this coin</string>
     <string name="notify_tooltip">Add or Remove notifications for this coin</string>
     <string name="level_up">Level Up</string>
+    <string name="skill_points">Skill Points</string>
+    <string name="spend">Spend</string>
 </resources>
