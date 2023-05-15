@@ -68,6 +68,7 @@ import com.locoquest.app.AppModule.Companion.cancelNotification
 import com.locoquest.app.AppModule.Companion.scheduleNotification
 import com.locoquest.app.AppModule.Companion.user
 import com.locoquest.app.Converters.Companion.toMarkerOptions
+import com.locoquest.app.MainActivity.Companion.secondaryFragment
 import com.locoquest.app.dto.Benchmark
 import com.locoquest.app.dto.User
 import java.net.UnknownHostException
@@ -190,6 +191,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
         val openProfileClickListener = View.OnClickListener {
             profile = Profile(user, true, this, this)
+            secondaryFragment = profile
             activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.secondary_container, profile!!)?.commit()
         }
         userImg = view.findViewById(R.id.user_image)
@@ -384,6 +386,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     override fun onClose(fragment: Fragment) {
         activity?.supportFragmentManager?.beginTransaction()?.remove(fragment)?.commit()
+        profile = null
+        secondaryFragment = null
         if(user.isBoosted()) monitorBoostedTimer()
         balance.text = user.balance.toString()
         displayUserInfo()
@@ -601,6 +605,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         if(profile != null){
             activity?.supportFragmentManager?.beginTransaction()?.remove(profile!!)?.commit()
             profile = null
+            secondaryFragment = null
         }
     }
 

@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.util.Log
 import android.view.Menu
 import androidx.appcompat.app.AlertDialog
@@ -63,6 +64,19 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         home = Home(this)
         supportFragmentManager.beginTransaction().replace(R.id.primary_container, home).commit()
 
+        val secFrag = savedInstanceState?.getString("secondaryFragment")
+        if(secFrag != null){
+            Log.d(TAG, "onCreate; secondaryFragment=$secFrag")
+            secondaryFragment = when (secFrag) {
+                "Profile" -> Profile(user, true, this, home)
+                "CoinCollectedDialog" -> CoinCollectedDialog(this, this)
+                else -> null
+            }
+            secondaryFragment?.let {
+                supportFragmentManager.beginTransaction().replace(R.id.secondary_container, it).commit()
+            }
+        }
+
         Thread{
             db = Room.databaseBuilder(this, DB::class.java, "db")
                 .fallbackToDestructiveMigration().build()
@@ -73,13 +87,18 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         }.start()
     }
 
-    /**
-     * Called when a permission request has been completed.
-     *
-     * @param requestCode The request code that was passed to the permission request.
-     * @param permissions An array of permission strings.
-     * @param grantResults An array of grant results for the corresponding permissions.
-     */
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if(secondaryFragment == null) return
+        val secFrag = when (secondaryFragment) {
+            is Profile -> "Profile"
+            is CoinCollectedDialog -> "CoinCollectedDialog"
+            else -> ""
+        }
+        Log.d(TAG, "onSaveInstanceState; secondaryFragment=$secFrag")
+        outState.putString("secondaryFragment", secFrag)
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -111,10 +130,6 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         }
     }
 
-    /**
-     * Called when the activity receives a result from another activity.
-     * In this case, it handles the result of the Google One-Tap sign-in dialog.
-     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         Log.d("event", "MainActivity.onActivityResult")
@@ -160,17 +175,11 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         }
     }
 
-    /*override fun onBenchmarkClicked(benchmark: Benchmark) {
-        Log.d("event", "MainActivity.onBenchmarkClicked")
-        hideProfile()
-        home.selectedBenchmark = benchmark
-        home.loadMarkers(false)
-    }*/
-
     override fun onCoinCollected(benchmark: Benchmark) {
         Log.d("event", "MainActivity.onCoinCollected")
         //Toast.makeText(this, "Coin collected", Toast.LENGTH_SHORT).show()
-        supportFragmentManager.beginTransaction().replace(R.id.secondary_container, CoinCollectedDialog(this, this)).commit()
+        secondaryFragment = CoinCollectedDialog(this, this)
+        supportFragmentManager.beginTransaction().replace(R.id.secondary_container, secondaryFragment!!).commit()
         if(benchmark.notify) scheduleNotification(this, benchmark)
     }
 
@@ -179,45 +188,10 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         startActivity(Intent(this, ExtraCoinAdMobActivity::class.java))
     }
 
-    /*override fun onLogin() {
-        try {
-            Log.d("event", "MainActivity.onLogin")
-            oneTapClient.beginSignIn(signUpRequest)
-                .addOnSuccessListener(this) { result ->
-                    try {
-                        startIntentSenderForResult(
-                            result.pendingIntent.intentSender, REQ_ONE_TAP,
-                            null, 0, 0, 0
-                        )
-                    } catch (e: IntentSender.SendIntentException) {
-                        Log.e(TAG, "Couldn't start One Tap UI: ${e.localizedMessage}")
-                    }
-                }
-                .addOnFailureListener(this) { e ->
-                    // No Google Accounts found. Just continue presenting the signed-out UI.
-                    e.localizedMessage?.let { it1 -> Log.d(TAG, it1) }
-                }
-        } catch (ex: java.lang.Exception) {
-            ex.localizedMessage?.let { Log.d(TAG, it) }
-        }
-    }
-
-    override fun onSignOut() {
-        Log.d("event", "MainActivity.onSignOut")
-        Firebase.auth.signOut()
-        supportActionBar?.let {
-            it.title = "LocoQuest"
-            menu.findItem(R.id.menu_item_account).icon =
-                ContextCompat.getDrawable(this, R.drawable.account)
-
-            user = guest
-            switchUser()
-        }
-    }*/
-
     override fun onClose(fragment: Fragment) {
         Log.d("event", "MainActivity.onClose")
         supportFragmentManager.beginTransaction().remove(fragment).commit()
+        secondaryFragment = null
         if(user.isBoosted()) home.monitorBoostedTimer()
         home.balance.text = user.balance.toString()
     }
@@ -227,157 +201,11 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         supportFragmentManager.beginTransaction().replace(R.id.secondary_container, Store(this)).commit()
     }
 
-    /*private fun displayUserInfo() {
-        if (user.displayName == "") {
-            user.displayName = auth.currentUser?.displayName.toString()
-        }
-
-        supportActionBar?.title = user.displayName
-
-        Glide.with(this)
-            .load(user.photoUrl)
-            .transform(CircleCrop())
-            .into(object : CustomTarget<Drawable>() {
-                override fun onResourceReady(
-                    resource: Drawable,
-                    transition: com.bumptech.glide.request.transition.Transition<in Drawable>?
-                ) {
-                    menu.findItem(R.id.menu_item_account).icon = resource
-                }
-
-                override fun onLoadCleared(placeholder: Drawable?) {}
-            })
-
-        try{
-            home.balance.text = user.balance.toString()
-        }catch (e:Exception) {
-            Log.e("balance", e.toString())
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun switchUser() {
-        if (switchingUser) return
-        Thread {
-            switchingUser = true
-            val userDao = db!!.localUserDAO()
-            val tmpUser = userDao.getUser(user.uid)
-
-            if (tmpUser == null) {
-                userDao.insert(user)
-            } else user = tmpUser
-
-            Log.d("user", "user loaded from db; ${user.dump()}")
-
-            Handler(Looper.getMainLooper()).post {
-                supportActionBar?.title = user.displayName
-                hideProfile()
-
-                if (user.uid == guest.uid) {
-                    home.loadMarkers(true)
-                    displayUserInfo()
-                    Log.d("user", "user switched; ${user.dump()}")
-                    switchingUser = false
-                    return@post
-                }
-
-                Firebase.firestore.collection("users").document(user.uid)
-                    .get()
-                    .addOnSuccessListener {
-                        if (it.data == null) {
-                            user.push()
-                            return@addOnSuccessListener
-                        }
-                        Log.d(TAG, "${it.id} => ${it.data}")
-
-                        val name =
-                            if (it["name"] == null) user.displayName else it["name"] as String
-
-                        val photoUrl = if (it["photoUrl"] == null) {
-                            user.photoUrl = auth.currentUser?.photoUrl.toString()
-                            user.photoUrl
-                        } else it["photoUrl"] as String
-
-                        val lastRadiusBoost =
-                            if (it["lastRadiusBoost"] == null) user.lastRadiusBoost
-                            else {
-                                val tmpVal = it["lastRadiusBoost"] as Timestamp
-                                if (tmpVal.seconds > user.lastRadiusBoost.seconds) tmpVal
-                                else user.lastRadiusBoost
-                            }
-
-                        val balance = if (it["balance"] == null) user.balance
-                        else max(user.balance, it["balance"] as Long)
-
-                        val experience = if(it["experience"] == null) user.experience
-                        else max(user.experience, it["experience"] as Long)
-
-                        val level = if(it["level"] == null) user.level
-                        else max(user.level, it["level"] as Long)
-
-                        var visited = HashMap<String, Benchmark>()
-                        val visitedList =
-                            if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
-                        visitedList.forEach { x ->
-                            val pid = x["pid"] as String
-                            val lastVisited = if(x["lastVisited"] == null) Timestamp(0,0) else x["lastVisited"] as Timestamp
-                            val notify = if(x["notify"] == null) false else x["notify"] as Boolean
-
-                            visited[pid] = Benchmark.new(
-                                pid,
-                                x["name"] as String,
-                                x["location"] as GeoPoint,
-                                lastVisited,
-                                notify
-                            )
-                        }
-                        if (visited.isNotEmpty() && user.visited.isNotEmpty() &&
-                            visited.values.sortedByDescending { x -> x.lastVisited }[0].lastVisited < user.visited.values.sortedByDescending { x -> x.lastVisited }[0].lastVisited
-                        )
-                            visited = user.visited
-
-                        val friends =
-                            if (it["friends"] == null) ArrayList() else it["friends"] as ArrayList<String>
-
-                        user = User(
-                            user.uid,
-                            name,
-                            photoUrl,
-                            balance,
-                            experience,
-                            level,
-                            lastRadiusBoost,
-                            visited,
-                            friends
-                        )
-                        user.update()
-                        home.loadMarkers(true)
-                    }
-                    .addOnFailureListener {
-                        Log.d(TAG, it.toString())
-                        user.push()
-                        home.loadMarkers(true)
-                    }.addOnCompleteListener {
-                        //home.balance.text = user.balance.toString()
-                        displayUserInfo()
-                        Log.d("user", "user switched; ${user.dump()}")
-                        switchingUser = false
-                    }
-            }
-        }.start()
-    }
-
-    private fun hideProfile(){
-        if(profile != null){
-            supportFragmentManager.beginTransaction().remove(profile!!).commit()
-            profile = null
-        }
-    }*/
-
     companion object {
         const val MY_PERMISSIONS_REQUEST_LOCATION = 1
         const val REQ_ONE_TAP = 2
         const val NOTIFICATIONS_REQUEST_CODE = 3
+        var secondaryFragment: Fragment? = null
         private val TAG: String = MainActivity::class.java.name
     }
 }
