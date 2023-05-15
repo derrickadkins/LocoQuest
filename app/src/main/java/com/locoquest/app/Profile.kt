@@ -151,7 +151,7 @@ class Profile(private val user: User,
 
         val spendSkillPoints = view.findViewById<Button>(R.id.spend_skillPoints)
         spendSkillPoints.setOnClickListener {
-            //TODO
+            startActivity(Intent(requireContext(), SkillsActivity::class.java))
         }
 
         view.findViewById<FrameLayout>(R.id.profile_bg).setOnTouchListener { _, _ -> true }

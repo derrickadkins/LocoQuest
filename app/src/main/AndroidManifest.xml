@@ -19,7 +19,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LocoQuest"
+        android:theme="@style/Theme.LocoQuest.NoActionBar"
         tools:targetApi="31">
 
         <!--
@@ -60,7 +60,13 @@
         <activity
             android:name=".FriendsActivity"
             android:exported="true"
+            android:theme="@style/Theme.LocoQuest.ActionBar"
             android:parentActivityName=".MainActivity" />
+
+        <activity android:name=".SkillsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.LocoQuest.ActionBar"
+            android:parentActivityName=".MainActivity"/>
 
         <service android:name=".NotifyService"
             android:exported="true"

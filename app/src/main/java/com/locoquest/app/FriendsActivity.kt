@@ -33,6 +33,12 @@ class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongCl
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_friends)
 
+        supportActionBar?.title =
+            if(user.displayName[user.displayName.length-1].lowercaseChar() == 's')
+                "${user.displayName}' Friends"
+            else "${user.displayName}'s Friends"
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         friendCount = findViewById(R.id.friend_count)
         friendCount.text = "(${user.friends.size})"
         adapter = FriendsAdapter(this, ArrayList(), this, this)
