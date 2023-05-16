@@ -64,4 +64,5 @@
     <string name="level_up">Level Up</string>
     <string name="skill_points">Skill Points</string>
     <string name="spend">Spend</string>
+    <string name="drone">Drone</string>
 </resources>

@@ -1,6 +1,566 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/drone_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/drone_skill_img"
+                android:src="@drawable/drone2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_margin="12dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"/>
+
+            <TextView
+                android:id="@+id/drone_skill_title"
+                android:text="@string/drone"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"
+                app:layout_constraintTop_toTopOf="@id/drone_skill_img"
+                app:layout_constraintStart_toEndOf="@id/drone_skill_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/unlock_drone"
+                android:text="Unlock"
+                app:layout_constraintTop_toBottomOf="@id/drone_skill_title"
+                app:layout_constraintStart_toStartOf="@id/drone_skill_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/drone_skill_desc"
+                android:text="The ability to periodically fly a drone to collect coins."
+                android:textSize="24sp"
+                android:padding="12dp"
+                app:layout_constraintTop_toBottomOf="@id/drone_skill_img"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/drone_upgrades_layout"
+                app:layout_constraintTop_toBottomOf="@id/drone_skill_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Battery"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_batt"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Fly longer with a bigger battery"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_drone_batt"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Charger"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_charger"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Fly sooner with faster charging"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_drone_charger"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Motors"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_motor"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Fly faster with better motors"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_drone_motors"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/companion_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/companion_skill_img"
+                android:src="@drawable/spot"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_margin="12dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"/>
+
+            <TextView
+                android:id="@+id/companion_skill_title"
+                android:text="Companion"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"
+                app:layout_constraintTop_toTopOf="@id/companion_skill_img"
+                app:layout_constraintStart_toEndOf="@id/companion_skill_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/unlock_companion"
+                android:text="Unlock"
+                app:layout_constraintTop_toBottomOf="@id/companion_skill_title"
+                app:layout_constraintStart_toStartOf="@id/companion_skill_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/companion_skill_desc"
+                android:text="Deploy your robot companion to autonomously collect coins on your behalf."
+                android:textSize="24sp"
+                android:padding="12dp"
+                app:layout_constraintTop_toBottomOf="@id/companion_skill_img"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/companion_upgrades_layout"
+                app:layout_constraintTop_toBottomOf="@id/companion_skill_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Battery"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_batt"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Deploy longer with a bigger battery"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_companion_batt"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Charger"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_charger"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Deploy sooner with faster charging"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_companion_charger"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Motors"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_motor"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Collect faster with better motors"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_companion_motors"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/giant_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/giant_skill_img"
+                android:src="@drawable/iron_giant"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_margin="12dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"/>
+
+            <TextView
+                android:id="@+id/giant_skill_title"
+                android:text="Giant"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"
+                app:layout_constraintTop_toTopOf="@id/giant_skill_img"
+                app:layout_constraintStart_toEndOf="@id/giant_skill_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/unlock_giant"
+                android:text="Unlock"
+                app:layout_constraintTop_toBottomOf="@id/giant_skill_title"
+                app:layout_constraintStart_toStartOf="@id/giant_skill_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/giant_skill_desc"
+                android:text="Equip your exoskeleton to temporarily extend your reach."
+                android:textSize="24sp"
+                android:padding="12dp"
+                app:layout_constraintTop_toBottomOf="@id/giant_skill_img"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/giant_upgrades_layout"
+                app:layout_constraintTop_toBottomOf="@id/giant_skill_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Battery"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_batt"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Deploy longer with a bigger battery"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_giant_batt"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Charger"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_charger"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Deploy sooner with faster charging"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_giant_charger"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:padding="6dp"
+                    android:gravity="center_horizontal"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:text="Reach"
+                        android:textSize="24sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <ImageView
+                        android:src="@drawable/drone_motor"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"/>
+
+                    <TextView
+                        android:text="Reach further"
+                        android:textAlignment="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <Button
+                        android:id="@+id/unlock_giant_reach"
+                        android:text="Unlock"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/time_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/time_skill_img"
+                android:src="@drawable/time_travel"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_margin="12dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"/>
+
+            <TextView
+                android:id="@+id/time_skill_title"
+                android:text="Time"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                android:layout_marginStart="12dp"
+                app:layout_constraintTop_toTopOf="@id/time_skill_img"
+                app:layout_constraintStart_toEndOf="@id/time_skill_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <Button
+                android:id="@+id/unlock_time"
+                android:text="Unlock"
+                app:layout_constraintStart_toStartOf="@id/time_skill_title"
+                app:layout_constraintTop_toBottomOf="@id/time_skill_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/time_skill_desc"
+                android:text="Travel 4 hours into the future when coins are collectable again."
+                android:textSize="24sp"
+                android:padding="12dp"
+                app:layout_constraintTop_toBottomOf="@id/time_skill_img"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/time_upgrade_layout"
+                android:padding="6dp"
+                app:layout_constraintTop_toBottomOf="@id/time_skill_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/time_charger_title"
+                    android:text="Charger"
+                    android:textSize="24sp"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/time_charger_desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <ImageView
+                    android:id="@+id/time_charger_img"
+                    android:src="@drawable/drone_charger"
+                    app:layout_constraintTop_toBottomOf="@id/time_charger_title"
+                    app:layout_constraintStart_toStartOf="@id/time_charger_title"
+                    app:layout_constraintEnd_toEndOf="@id/time_charger_title"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"/>
+
+                <TextView
+                    android:id="@+id/time_charger_desc"
+                    android:text="Time travel more frequently"
+                    app:layout_constraintTop_toTopOf="@id/time_charger_title"
+                    app:layout_constraintStart_toEndOf="@id/time_charger_title"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:padding="6dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <Button
+                    android:id="@+id/unlock_time_charger"
+                    android:text="Unlock"
+                    app:layout_constraintTop_toBottomOf="@id/time_charger_desc"
+                    app:layout_constraintStart_toStartOf="@id/time_charger_desc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <Button
+            android:id="@+id/reset_skills"
+            android:text="Reset Skills"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</ScrollView>
