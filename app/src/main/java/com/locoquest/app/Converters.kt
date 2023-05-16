@@ -58,6 +58,17 @@ class Converters {
         return gson.fromJson(json, type)
     }
 
+    @TypeConverter
+    fun fromUpgrades(upgrades: ArrayList<Upgrade>): String{
+        return gson.toJson(upgrades)
+    }
+
+    @TypeConverter
+    fun toUpgrades(json: String): ArrayList<Upgrade>{
+        val type = object : TypeToken<ArrayList<Upgrade>>(){}.type
+        return gson.fromJson(json, type)
+    }
+
     companion object {
         fun toMarkerOptions(benchmark: Benchmark): MarkerOptions {
             return MarkerOptions()
