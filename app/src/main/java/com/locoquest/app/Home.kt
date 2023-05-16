@@ -513,77 +513,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                         }
                         Log.d(TAG, "${it.id} => ${it.data}")
 
-                        val name =
-                            if (it["name"] == null) user.displayName else it["name"] as String
-
-                        val photoUrl = if (it["photoUrl"] == null) {
-                            user.photoUrl = Firebase.auth.currentUser?.photoUrl.toString()
-                            user.photoUrl
-                        } else it["photoUrl"] as String
-
-                        val lastRadiusBoost =
-                            if (it["lastRadiusBoost"] == null) user.lastRadiusBoost
-                            else {
-                                val tmpVal = it["lastRadiusBoost"] as Timestamp
-                                if (tmpVal.seconds > user.lastRadiusBoost.seconds) tmpVal
-                                else user.lastRadiusBoost
-                            }
-
-                        val balance = if (it["balance"] == null) user.balance
-                        else max(user.balance, it["balance"] as Long)
-
-                        val experience = if(it["experience"] == null) user.experience
-                        else max(user.experience, it["experience"] as Long)
-
-                        val level = if(it["level"] == null) user.level
-                        else max(user.level, it["level"] as Long)
-
-                        val skillPoints = if(it["skillPoints"] == null) user.skillPoints
-                        else max(user.skillPoints, it["skillPoints"] as Long)
-
-                        val skills = ArrayList<Skill>()
-                        val skillList = if(it["skills"] == null) ArrayList() else it["skills"] as ArrayList<String>
-                        skillList.forEach { x->
-                            val skill = Skill.values().find { s -> s.name == x }
-                            if(skill != null) skills.add(skill)
-                        }
-
-                        var visited = HashMap<String, Benchmark>()
-                        val visitedList = if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
-                        visitedList.forEach { x ->
-                            val pid = x["pid"] as String
-                            val lastVisited = if(x["lastVisited"] == null) Timestamp(0,0) else x["lastVisited"] as Timestamp
-                            val notify = if(x["notify"] == null) false else x["notify"] as Boolean
-
-                            visited[pid] = Benchmark.new(
-                                pid,
-                                x["name"] as String,
-                                x["location"] as GeoPoint,
-                                lastVisited,
-                                notify
-                            )
-                        }
-                        if (visited.isNotEmpty() && user.visited.isNotEmpty() &&
-                            visited.values.sortedByDescending { x -> x.lastVisited }[0].lastVisited < user.visited.values.sortedByDescending { x -> x.lastVisited }[0].lastVisited
-                        )
-                            visited = user.visited
-
-                        val friends =
-                            if (it["friends"] == null) ArrayList() else it["friends"] as ArrayList<String>
-
-                        user = User(
-                            user.uid,
-                            name,
-                            photoUrl,
-                            balance,
-                            experience,
-                            level,
-                            skillPoints,
-                            lastRadiusBoost,
-                            skills,
-                            visited,
-                            friends
-                        )
+                        user = User.pullUser(it)
                         user.update()
                         loadMarkers(true)
                     }
