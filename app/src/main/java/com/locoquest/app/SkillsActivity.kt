@@ -158,7 +158,7 @@ class SkillsActivity : AppCompatActivity() {
             user.update()
 
             skillPts.text = "Skill Points: ${user.skillPoints}"
-            
+
             companionUpgrades.visibility = View.GONE
             droneUpgrades.visibility = View.GONE
             giantUpgrades.visibility = View.GONE

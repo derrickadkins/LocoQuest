@@ -106,32 +106,94 @@
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <ImageView
-        android:id="@+id/mushroom"
-        android:visibility="gone"
-        android:padding="8dp"
-        app:layout_constraintTop_toTopOf="@id/linear_layout_compat"
-        app:layout_constraintBottom_toBottomOf="@id/linear_layout_compat"
-        app:layout_constraintStart_toEndOf="@id/linear_layout_compat"
-        android:src="@drawable/radius_booster"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"/>
+        android:id="@+id/giant"
+        android:src="@drawable/iron_giant"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toTopOf="@id/user_exp"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="72dp"
+        android:layout_height="72dp"/>
 
     <TextView
-        android:id="@+id/timerTxt"
-        android:visibility="gone"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:text="@string/radius_boost_expires_in_5_00"
+        android:id="@+id/giant_timer"
+        android:text="5:00"
         android:background="@drawable/timer_bg"
         android:textColor="@color/black"
-        android:padding="8dp"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
         android:textAlignment="center"
-        app:layout_constraintStart_toEndOf="@id/linear_layout_compat"
-        app:layout_constraintTop_toTopOf="@id/linear_layout_compat"
-        app:layout_constraintBottom_toBottomOf="@id/linear_layout_compat"
-        app:layout_constraintEnd_toStartOf="@id/my_location"
+        app:layout_constraintStart_toStartOf="@id/giant"
+        app:layout_constraintEnd_toEndOf="@id/giant"
+        app:layout_constraintBottom_toBottomOf="@id/giant"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <ImageView
+        android:id="@+id/drone"
+        android:src="@drawable/drone2"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toTopOf="@id/giant"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="72dp"
+        android:layout_height="72dp"/>
+
+    <TextView
+        android:id="@+id/drone_timer"
+        android:text="5:00"
+        android:background="@drawable/timer_bg"
+        android:textColor="@color/black"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@id/drone"
+        app:layout_constraintStart_toStartOf="@id/drone"
+        app:layout_constraintEnd_toEndOf="@id/drone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <ImageView
+        android:id="@+id/companion"
+        android:src="@drawable/spot"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toTopOf="@id/drone"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="72dp"
+        android:layout_height="72dp"/>
+
+    <TextView
+        android:id="@+id/companion_timer"
+        android:text="5:00"
+        android:background="@drawable/timer_bg"
+        android:textColor="@color/black"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@id/companion"
+        app:layout_constraintStart_toStartOf="@id/companion"
+        app:layout_constraintEnd_toEndOf="@id/companion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <ImageView
+        android:id="@+id/time"
+        android:src="@drawable/time_travel"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toTopOf="@id/companion"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="72dp"
+        android:layout_height="72dp"/>
+
+    <TextView
+        android:id="@+id/time_timer"
+        android:text="5:00"
+        android:background="@drawable/timer_bg"
+        android:textColor="@color/black"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="@id/time"
+        app:layout_constraintStart_toStartOf="@id/time"
+        app:layout_constraintEnd_toEndOf="@id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 

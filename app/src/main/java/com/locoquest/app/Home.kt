@@ -205,11 +205,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         balance = view.findViewById(R.id.balance)
         displayUserInfo()
 
-        mushroom = view.findViewById(R.id.mushroom)
-        mushroom.setOnClickListener { homeListener.onMushroomClicked() }
-
-        timerTxt = view.findViewById(R.id.timerTxt)
-
         if(user.isBoosted()) monitorBoostedTimer()
 
         notifyFab = view.findViewById(R.id.notify_fab)
@@ -239,6 +234,26 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                 notifyFab.setImageResource(R.drawable.notifications_off)
             }
         }
+
+        val timeTravel = view.findViewById<ImageView>(R.id.time)
+        val companion = view.findViewById<ImageView>(R.id.companion)
+        val drone = view.findViewById<ImageView>(R.id.drone)
+        val giant = view.findViewById<ImageView>(R.id.giant)
+
+        val timeTravelTimer = view.findViewById<TextView>(R.id.time_timer)
+        val companionTimer = view.findViewById<TextView>(R.id.companion_timer)
+        val droneTimer = view.findViewById<TextView>(R.id.drone_timer)
+        val giantTimer = view.findViewById<TextView>(R.id.giant_timer)
+
+        timeTravel.visibility = if(user.skills.contains(Skill.TIME)) View.VISIBLE else View.GONE
+        companion.visibility = if(user.skills.contains(Skill.COMPANION)) View.VISIBLE else View.GONE
+        drone.visibility = if(user.skills.contains(Skill.DRONE)) View.VISIBLE else View.GONE
+        giant.visibility = if(user.skills.contains(Skill.GIANT)) View.VISIBLE else View.GONE
+
+        timeTravelTimer.visibility = View.GONE
+        companionTimer.visibility = View.GONE
+        droneTimer.visibility = View.GONE
+        giantTimer.visibility = View.GONE
 
         return view
     }
