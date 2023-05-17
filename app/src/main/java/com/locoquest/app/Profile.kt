@@ -144,7 +144,7 @@ class Profile(private val user: User,
         }
 
         val skillPointsLayout = view.findViewById<FrameLayout>(R.id.skillPoints_layout)
-        skillPointsLayout.visibility = if(user.skillPoints > 0) View.VISIBLE else View.GONE
+        //skillPointsLayout.visibility = if(user.skillPoints > 0) View.VISIBLE else View.GONE
 
         val skillPoints = view.findViewById<TextView>(R.id.skillPoints)
         skillPoints.text = user.skillPoints.toString()
