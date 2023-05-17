@@ -86,5 +86,15 @@ class Converters {
             val date = Date(seconds * 1000)
             return sdf.format(date)
         }
+
+        fun toCountdownFormat(seconds: Long): String {
+            val hours = seconds / 3600
+            val minutes = (seconds % 3600) / 60
+            val secondsRemaining = seconds % 60
+
+            return if(hours > 0) String.format("%02d:%02d:%02d", hours, minutes, secondsRemaining)
+            else if(minutes > 0) String.format("%02d:%02d", minutes, secondsRemaining)
+            else String.format("%02d", secondsRemaining)
+        }
     }
 }

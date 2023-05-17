@@ -115,7 +115,7 @@ class RadiusBoosterAdMobActivity : AppCompatActivity() {
         // Show the ad if it"s ready. Otherwise toast and reload the ad.
         if (interstitialAd != null) {
             interstitialAd!!.show(this) {
-                user.lastRadiusBoost = Timestamp.now()
+                user.lastUsedGiant = Timestamp.now()
                 user.update()
                 finish()
             }

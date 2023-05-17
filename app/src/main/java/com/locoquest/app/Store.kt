@@ -25,7 +25,7 @@ class Store(private val fragmentListener: ISecondaryFragment) : Fragment() {
                 Toast.makeText(requireContext(), "Insufficient Funds", Toast.LENGTH_SHORT).show()
             }else {
                 user.balance -= 2
-                user.lastRadiusBoost = Timestamp.now()
+                user.lastUsedGiant = Timestamp.now()
                 user.update()
                 fragmentListener.onClose(this)
             }

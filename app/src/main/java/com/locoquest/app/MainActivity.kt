@@ -9,44 +9,24 @@ package com.locoquest.app
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.content.IntentSender
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.PersistableBundle
 import android.util.Log
-import android.view.Menu
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.room.Room
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.CircleCrop
-import com.bumptech.glide.request.target.CustomTarget
-import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.locoquest.app.AppModule.Companion.db
-import com.locoquest.app.AppModule.Companion.guest
 import com.locoquest.app.AppModule.Companion.scheduleNotification
 import com.locoquest.app.AppModule.Companion.user
 import com.locoquest.app.dao.DB
 import com.locoquest.app.dto.Benchmark
 import com.locoquest.app.dto.User
-import kotlin.math.max
 
 
 class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
@@ -192,7 +172,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         Log.d("event", "MainActivity.onClose")
         supportFragmentManager.beginTransaction().remove(fragment).commit()
         secondaryFragment = null
-        if(user.isBoosted()) home.monitorBoostedTimer()
+        //if(user.isGiantInUse()) home.monitorBoostedTimer()
         home.balance.text = user.balance.toString()
     }
 

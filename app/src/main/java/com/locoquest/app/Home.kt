@@ -58,7 +58,6 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.locoquest.app.AppModule.Companion.BOOSTED_DURATION
@@ -71,8 +70,9 @@ import com.locoquest.app.Converters.Companion.toMarkerOptions
 import com.locoquest.app.MainActivity.Companion.secondaryFragment
 import com.locoquest.app.dto.Benchmark
 import com.locoquest.app.dto.User
+import org.w3c.dom.Text
 import java.net.UnknownHostException
-import kotlin.math.max
+import kotlin.math.log
 
 class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
     ISecondaryFragment, Profile.ProfileListener {
@@ -105,6 +105,15 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private lateinit var layersFab: FloatingActionButton
     private lateinit var myLocation: FloatingActionButton
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var timeTravel: ImageView
+    private lateinit var companion: ImageView
+    private lateinit var drone: ImageView
+    private lateinit var giant: ImageView
+    private lateinit var timeTravelTimer: TextView
+    private lateinit var companionTimer: TextView
+    private lateinit var droneTimer: TextView
+    private lateinit var giantTimer: TextView
+    private val skillTimers = Array<Skill?>(Skill.values().size) { null }
 
     interface HomeListener {
         fun onMushroomClicked()
@@ -205,8 +214,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         balance = view.findViewById(R.id.balance)
         displayUserInfo()
 
-        if(user.isBoosted()) monitorBoostedTimer()
-
         notifyFab = view.findViewById(R.id.notify_fab)
         notifyFab.setOnClickListener {
             val benchmark = markerToBenchmark[selectedMarker]!!
@@ -235,25 +242,56 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             }
         }
 
-        val timeTravel = view.findViewById<ImageView>(R.id.time)
-        val companion = view.findViewById<ImageView>(R.id.companion)
-        val drone = view.findViewById<ImageView>(R.id.drone)
-        val giant = view.findViewById<ImageView>(R.id.giant)
+        timeTravel = view.findViewById(R.id.time)
+        companion = view.findViewById(R.id.companion)
+        drone = view.findViewById(R.id.drone)
+        giant = view.findViewById(R.id.giant)
 
-        val timeTravelTimer = view.findViewById<TextView>(R.id.time_timer)
-        val companionTimer = view.findViewById<TextView>(R.id.companion_timer)
-        val droneTimer = view.findViewById<TextView>(R.id.drone_timer)
-        val giantTimer = view.findViewById<TextView>(R.id.giant_timer)
+        timeTravelTimer = view.findViewById(R.id.time_timer)
+        companionTimer = view.findViewById(R.id.companion_timer)
+        droneTimer = view.findViewById(R.id.drone_timer)
+        giantTimer = view.findViewById(R.id.giant_timer)
 
         timeTravel.visibility = if(user.skills.contains(Skill.TIME)) View.VISIBLE else View.GONE
         companion.visibility = if(user.skills.contains(Skill.COMPANION)) View.VISIBLE else View.GONE
         drone.visibility = if(user.skills.contains(Skill.DRONE)) View.VISIBLE else View.GONE
         giant.visibility = if(user.skills.contains(Skill.GIANT)) View.VISIBLE else View.GONE
 
-        timeTravelTimer.visibility = View.GONE
-        companionTimer.visibility = View.GONE
-        droneTimer.visibility = View.GONE
-        giantTimer.visibility = View.GONE
+        var pair = user.isSkillInUse(Skill.TIME)
+        timeTravelTimer.visibility = if(pair.first) {
+            monitorSkillTimer(Skill.TIME)
+            View.VISIBLE
+        } else View.GONE
+
+        pair = user.isSkillInUse(Skill.COMPANION)
+        companionTimer.visibility = if(pair.first) {
+            monitorSkillTimer(Skill.COMPANION)
+            View.VISIBLE
+        } else View.GONE
+
+        pair = user.isSkillInUse(Skill.DRONE)
+        droneTimer.visibility = if(pair.first) {
+            monitorSkillTimer(Skill.DRONE)
+            View.VISIBLE
+        } else View.GONE
+
+        pair = user.isSkillInUse(Skill.GIANT)
+        giantTimer.visibility = if(pair.first) {
+            monitorSkillTimer(Skill.GIANT)
+            View.VISIBLE
+        } else View.GONE
+
+        val skillClickListener = View.OnClickListener {
+            when(it.id){
+                R.id.giant -> {
+                    user.lastUsedGiant = Timestamp.now()
+                    monitorSkillTimer(Skill.GIANT)
+                }
+            }
+            user.update()
+        }
+
+        giant.setOnClickListener(skillClickListener)
 
         return view
     }
@@ -275,7 +313,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         notifyUserOfNetwork = true
 
         balance.text = user.balance.toString()
-        if(user.isBoosted()) monitorBoostedTimer()
+        // todo - start and monitor timers/UI
     }
 
     override fun onPause() {
@@ -349,7 +387,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         val benchmark = markerToBenchmark[marker]!!
 
         notifyFab.visibility = View.VISIBLE
-        notifyFab.setImageResource(if(benchmark.notify)R.drawable.notifications_active else R.drawable.notifications_off)
+        notifyFab.setImageResource(if(benchmark.notify) R.drawable.notifications_active else R.drawable.notifications_off)
 
         monitorSelectedMarker()
 
@@ -403,7 +441,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         activity?.supportFragmentManager?.beginTransaction()?.remove(fragment)?.commit()
         profile = null
         secondaryFragment = null
-        if(user.isBoosted()) monitorBoostedTimer()
         balance.text = user.balance.toString()
         displayUserInfo()
     }
@@ -417,7 +454,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     override fun onLogin() {
         try {
-            Log.d("event", "MainActivity.onLogin")
+            Log.d("event", "onLogin")
 
             val signUpRequest = BeginSignInRequest.builder()
                 .setGoogleIdTokenRequestOptions(
@@ -554,21 +591,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
     }
 
-    private fun toCountdownFormat(seconds: Long): String {
-        val hours = seconds / 3600
-        val minutes = (seconds % 3600) / 60
-        val secondsRemaining = seconds % 60
-
-        return if(hours > 0) String.format("%02d:%02d:%02d", hours, minutes, secondsRemaining)
-        else if(minutes > 0) String.format("%02d:%02d", minutes, secondsRemaining)
-        else String.format("%02d", secondsRemaining)
-    }
-
-
     private fun getSnippet(benchmark: Benchmark) : String{
         return if (benchmark.lastVisited + SECONDS_TO_RECOLLECT > System.currentTimeMillis() / 1000) {
             val secondsLeft = benchmark.lastVisited + SECONDS_TO_RECOLLECT - System.currentTimeMillis() / 1000
-            "Collect in ${toCountdownFormat(secondsLeft)}"
+            "Collect in ${Converters.toCountdownFormat(secondsLeft)}"
         }else if(benchmark.lastVisited > 0) "Collected ${Converters.formatSeconds(benchmark.lastVisited)}"
         else "Never collected"
     }
@@ -787,11 +813,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     private fun collected(benchmark: Benchmark) : Boolean{
-        return benchmark.lastVisited + SECONDS_TO_RECOLLECT > System.currentTimeMillis() / 1000
+        return benchmark.lastVisited + SECONDS_TO_RECOLLECT > Timestamp.now().seconds
     }
 
     private fun canCollect(benchmark: Benchmark) : Boolean{
-        return benchmark.lastVisited + SECONDS_TO_RECOLLECT < System.currentTimeMillis() / 1000
+        return benchmark.lastVisited + SECONDS_TO_RECOLLECT < Timestamp.now().seconds
     }
 
     @SuppressLint("MissingPermission")
@@ -908,7 +934,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     private fun getMyLocationCircle() : CircleOptions{
         val loc = lastLocation()
-        val isBoosted = user.isBoosted()
+        val isBoosted = user.isSkillInUse(Skill.GIANT).first
         val color = if(isBoosted) Color.argb(50, 255, 255, 0)
         else Color.argb(50, 0, 0, 255)
         return CircleOptions()
@@ -919,28 +945,32 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             .radius(user.getReach())
     }
 
-    fun monitorBoostedTimer(){
-        if(monitoringBoost) return
-        monitoringBoost = true
-        mushroom.visibility = View.GONE
+    private fun monitorSkillTimer(skill: Skill){
+        if(skillTimers.contains(skill)) return
+        skillTimers[skill.ordinal] = skill
+        val timerTxt = when(skill){
+            Skill.GIANT -> giantTimer
+            Skill.DRONE -> droneTimer
+            Skill.TIME -> timeTravelTimer
+            Skill.COMPANION -> companionTimer
+        }
+
         timerTxt.visibility = View.VISIBLE
-        circle?.remove()
-        circle = googleMap?.addCircle(getMyLocationCircle())
+
         Thread{
-            while (user.isBoosted()){
-                val remainingSeconds = user.lastRadiusBoost.seconds + BOOSTED_DURATION - Timestamp.now().seconds
+            var pair = user.isSkillInUse(skill)
+            while (pair.first){
                 Handler(Looper.getMainLooper()).post {
-                    timerTxt.text = "Radius Boost\nExpires in ${toCountdownFormat(remainingSeconds)}"
+                    timerTxt.text = Converters.toCountdownFormat(pair.second)
                 }
                 Thread.sleep(1000)
+                pair = user.isSkillInUse(skill)
             }
+
             Handler(Looper.getMainLooper()).post {
-                mushroom.visibility = View.VISIBLE
                 timerTxt.visibility = View.GONE
-                circle?.remove()
-                circle = googleMap?.addCircle(getMyLocationCircle())
             }
-            monitoringBoost = false
+            skillTimers[skill.ordinal] = null
         }.start()
     }
 

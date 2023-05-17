@@ -8,8 +8,8 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.gson.Gson
 import com.locoquest.app.AppModule
-import com.locoquest.app.AppModule.Companion.BOOSTED_DURATION
 import com.locoquest.app.AppModule.Companion.BOOSTED_REACH
 import com.locoquest.app.AppModule.Companion.DEFAULT_REACH
 import com.locoquest.app.AppModule.Companion.db
@@ -27,11 +27,14 @@ data class User(
     var experience: Long = 0,
     var level: Long = 1,
     var skillPoints: Long = 0,
-    var lastRadiusBoost: Timestamp = Timestamp(0,0),
+    var lastUsedGiant: Timestamp = Timestamp(0,0),
+    var lastUsedDrone: Timestamp = Timestamp(0,0),
+    var lastUsedCompanion: Timestamp = Timestamp(0,0),
+    var lastUsedTimeTravel: Timestamp = Timestamp(0,0),
     val skills: ArrayList<Skill> = ArrayList(),
     val upgrades: ArrayList<Upgrade> = ArrayList(),
     val visited: HashMap<String, Benchmark> = HashMap(),
-    val friends: ArrayList<String> = ArrayList()
+    val friends: ArrayList<String> = ArrayList(),
 ){
 
     fun update(){
@@ -62,7 +65,10 @@ data class User(
                 "experience" to experience,
                 "level" to level,
                 "skillPoints" to skillPoints,
-                "lastRadiusBoost" to lastRadiusBoost,
+                "lastUsedGiant" to lastUsedGiant,
+                "lastUsedCompanion" to lastUsedCompanion,
+                "lastUsedDrone" to lastUsedDrone,
+                "lastUsedTimeTravel" to lastUsedTimeTravel,
                 "skills" to skillList.toList(),
                 "upgrades" to upgradeList.toList(),
                 "visited" to visitedList.toList(),
@@ -70,16 +76,51 @@ data class User(
             ))
     }
 
-    fun isBoosted(): Boolean {
-        return AppModule.user.lastRadiusBoost.seconds + BOOSTED_DURATION > Timestamp.now().seconds
+    fun lastUsedSkill(skill: Skill): Long{
+        return when(skill){
+            Skill.COMPANION -> lastUsedCompanion.seconds
+            Skill.TIME -> lastUsedTimeTravel.seconds
+            Skill.DRONE -> lastUsedDrone.seconds
+            Skill.GIANT -> lastUsedGiant.seconds
+        }
+    }
+
+    fun isSkillAvailable(skill: Skill): Boolean{
+        var reuseIn = skill.reuseIn
+        val upgrade = when(skill){
+            Skill.GIANT -> Upgrade.GIANT_CHARGE
+            Skill.TIME -> Upgrade.TIME_CHARGE
+            Skill.COMPANION -> Upgrade.COMPANION_CHARGE
+            Skill.DRONE -> Upgrade.DRONE_CHARGE
+        }
+        if(upgrades.contains(upgrade)) reuseIn += upgrade.effect
+        return lastUsedSkill(skill) + skill.duration + reuseIn > Timestamp.now().seconds
+    }
+
+    fun isSkillInUse(skill: Skill): Pair<Boolean, Long>{
+        var duration = skill.duration
+        val upgrade = when(skill){
+            Skill.GIANT -> Upgrade.GIANT_BATT
+            Skill.DRONE -> Upgrade.DRONE_BATT
+            Skill.COMPANION -> Upgrade.COMPANION_BATT
+            Skill.TIME -> null
+        }
+        upgrade?.let { if(upgrades.contains(it)) duration += it.effect }
+        val lastUsed = lastUsedSkill(skill)
+        val now = Timestamp.now().seconds
+        return Pair(now - lastUsed < duration, duration - (now - lastUsed))
     }
 
     fun getReach(): Double {
-        return if (isBoosted()) BOOSTED_REACH else DEFAULT_REACH
+        return if (isSkillInUse(Skill.GIANT).first) {
+            var reach = BOOSTED_REACH
+            if(upgrades.contains(Upgrade.GIANT_REACH)) reach += Upgrade.GIANT_REACH.effect
+            reach
+        }else DEFAULT_REACH
     }
 
     fun dump() : String{
-        return "uid: $uid, name:$displayName, photoUrl:$photoUrl, balance:$balance, lastRadiusBoost:${lastRadiusBoost.seconds}, visited:${visited.size}, friends:${friends.size}"
+        return Gson().toJson(this)
     }
 
     override fun toString(): String {
@@ -96,12 +137,36 @@ data class User(
                 AppModule.user.photoUrl
             } else it["photoUrl"] as String
 
-            val lastRadiusBoost =
-                if (it["lastRadiusBoost"] == null) AppModule.user.lastRadiusBoost
+            val lastUsedCompanion =
+                if (it["lastUsedCompanion"] == null) AppModule.user.lastUsedCompanion
                 else {
-                    val tmpVal = it["lastRadiusBoost"] as Timestamp
-                    if (tmpVal.seconds > AppModule.user.lastRadiusBoost.seconds) tmpVal
-                    else AppModule.user.lastRadiusBoost
+                    val tmpVal = it["lastUsedCompanion"] as Timestamp
+                    if (tmpVal.seconds > AppModule.user.lastUsedCompanion.seconds) tmpVal
+                    else AppModule.user.lastUsedCompanion
+                }
+
+            val lastUsedDrone =
+                if (it["lastUsedDrone"] == null) AppModule.user.lastUsedDrone
+                else {
+                    val tmpVal = it["lastUsedDrone"] as Timestamp
+                    if (tmpVal.seconds > AppModule.user.lastUsedDrone.seconds) tmpVal
+                    else AppModule.user.lastUsedDrone
+                }
+
+            val lastUsedGiant =
+                if (it["lastUsedGiant"] == null) AppModule.user.lastUsedGiant
+                else {
+                    val tmpVal = it["lastUsedGiant"] as Timestamp
+                    if (tmpVal.seconds > AppModule.user.lastUsedGiant.seconds) tmpVal
+                    else AppModule.user.lastUsedGiant
+                }
+
+            val lastUsedTimeTravel =
+                if (it["lastUsedTimeTravel"] == null) AppModule.user.lastUsedTimeTravel
+                else {
+                    val tmpVal = it["lastUsedTimeTravel"] as Timestamp
+                    if (tmpVal.seconds > AppModule.user.lastUsedTimeTravel.seconds) tmpVal
+                    else AppModule.user.lastUsedTimeTravel
                 }
 
             val balance = if (it["balance"] == null) AppModule.user.balance
@@ -161,7 +226,10 @@ data class User(
                 experience,
                 level,
                 skillPoints,
-                lastRadiusBoost,
+                lastUsedGiant,
+                lastUsedDrone,
+                lastUsedCompanion,
+                lastUsedTimeTravel,
                 skills,
                 upgrades,
                 visited,
@@ -174,9 +242,6 @@ data class User(
             val balance = if(it["balance"] == null) 0L else it["balance"] as Long
             val experience = if(it["experience"] == null) 0 else it["experience"] as Long
             val level = if(it["level"] == null) 1 else it["level"] as Long
-            val skillPoints = if(it["skillPoints"] == null) 0 else it["skillPoints"] as Long
-            val lastRadiusBoost = if(it["lastRadiusBoost"] == null) Timestamp(0,0)
-            else it["lastRadiusBoost"] as Timestamp
 
             val skills = ArrayList<Skill>()
             val skillList = if(it["skills"] == null) ArrayList() else it["skills"] as ArrayList<String>
@@ -206,7 +271,21 @@ data class User(
 
             val friends = if(it["friends"] == null) ArrayList() else it["friends"] as ArrayList<String>
 
-            return User(it.id, name, photoUrl, balance, experience, level, skillPoints, lastRadiusBoost, skills, upgrades, visited, friends)
+            return User(it.id,
+                name,
+                photoUrl,
+                balance,
+                experience,
+                level,
+                0,
+                Timestamp(0,0),
+                Timestamp(0,0),
+                Timestamp(0,0),
+                Timestamp(0,0),
+                skills,
+                upgrades,
+                visited,
+                friends)
         }
     }
 }

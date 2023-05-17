@@ -1,14 +1,14 @@
 package com.locoquest.app
 
-enum class Upgrade(skill: Skill, name: String) {
-    DRONE_BATT(Skill.DRONE, "Battery"),
-    DRONE_CHARGE(Skill.DRONE, "Charger"),
-    DRONE_MOTOR(Skill.DRONE, "Motors"),
-    COMPANION_BATT(Skill.COMPANION, "Battery"),
-    COMPANION_CHARGE(Skill.COMPANION, "Charger"),
-    COMPANION_MOTOR(Skill.COMPANION, "Motors"),
-    GIANT_BATT(Skill.GIANT, "Battery"),
-    GIANT_CHARGE(Skill.GIANT, "Charger"),
-    GIANT_REACH(Skill.GIANT, "Reach"),
-    TIME_CHARGE(Skill.TIME, "Charge")
+enum class Upgrade(val skill: Skill, name: String, val effect: Int) {
+    DRONE_BATT(Skill.DRONE, "Battery", 300),
+    DRONE_CHARGE(Skill.DRONE, "Charger", -300),
+    DRONE_MOTOR(Skill.DRONE, "Motors", 5),
+    COMPANION_BATT(Skill.COMPANION, "Battery", 300),
+    COMPANION_CHARGE(Skill.COMPANION, "Charger", -300),
+    COMPANION_MOTOR(Skill.COMPANION, "Motors", 5),
+    GIANT_BATT(Skill.GIANT, "Battery", 300),
+    GIANT_CHARGE(Skill.GIANT, "Charger", -300),
+    GIANT_REACH(Skill.GIANT, "Reach", 300),
+    TIME_CHARGE(Skill.TIME, "Charge", -300)
 }
