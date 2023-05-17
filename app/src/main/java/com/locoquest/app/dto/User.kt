@@ -85,7 +85,8 @@ data class User(
         }
     }
 
-    fun isSkillAvailable(skill: Skill): Boolean{
+    fun isSkillAvailable(skill: Skill): Pair<Boolean, Long>{
+        if(!skills.contains(skill)) return Pair(false, 0)
         var reuseIn = skill.reuseIn
         val upgrade = when(skill){
             Skill.GIANT -> Upgrade.GIANT_CHARGE
@@ -94,10 +95,13 @@ data class User(
             Skill.DRONE -> Upgrade.DRONE_CHARGE
         }
         if(upgrades.contains(upgrade)) reuseIn += upgrade.effect
-        return lastUsedSkill(skill) + skill.duration + reuseIn > Timestamp.now().seconds
+        val availableIn = Timestamp.now().seconds - lastUsedSkill(skill) + skill.duration + reuseIn
+        val isAvailable = availableIn < 0
+        return Pair(isAvailable, availableIn)
     }
 
     fun isSkillInUse(skill: Skill): Pair<Boolean, Long>{
+        if(!isSkillAvailable(skill).first) return Pair(false, 0)
         var duration = skill.duration
         val upgrade = when(skill){
             Skill.GIANT -> Upgrade.GIANT_BATT
@@ -111,9 +115,9 @@ data class User(
         return Pair(now - lastUsed < duration, duration - (now - lastUsed))
     }
 
-    fun getReach(): Double {
+    fun getReach(): Int {
         return if (isSkillInUse(Skill.GIANT).first) {
-            var reach = BOOSTED_REACH
+            var reach = Skill.GIANT.effect
             if(upgrades.contains(Upgrade.GIANT_REACH)) reach += Upgrade.GIANT_REACH.effect
             reach
         }else DEFAULT_REACH

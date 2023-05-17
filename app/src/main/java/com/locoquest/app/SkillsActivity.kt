@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.constraintlayout.widget.ConstraintLayout
+import com.google.firebase.Timestamp
 import com.locoquest.app.AppModule.Companion.user
 
 class SkillsActivity : AppCompatActivity() {
@@ -152,6 +153,10 @@ class SkillsActivity : AppCompatActivity() {
         timeCharge.setOnClickListener(unlockListener)
 
         findViewById<Button>(R.id.reset_skills).setOnClickListener{
+            user.lastUsedGiant = Timestamp(0,0)
+            user.lastUsedCompanion = Timestamp(0,0)
+            user.lastUsedDrone = Timestamp(0,0)
+            user.lastUsedTimeTravel = Timestamp(0,0)
             user.skillPoints += user.skills.size + user.upgrades.size
             user.skills.clear()
             user.upgrades.clear()

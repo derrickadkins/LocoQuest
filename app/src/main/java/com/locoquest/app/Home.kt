@@ -60,7 +60,6 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.locoquest.app.AppModule.Companion.BOOSTED_DURATION
 import com.locoquest.app.AppModule.Companion.DEBUG
 import com.locoquest.app.AppModule.Companion.SECONDS_TO_RECOLLECT
 import com.locoquest.app.AppModule.Companion.cancelNotification
@@ -70,9 +69,7 @@ import com.locoquest.app.Converters.Companion.toMarkerOptions
 import com.locoquest.app.MainActivity.Companion.secondaryFragment
 import com.locoquest.app.dto.Benchmark
 import com.locoquest.app.dto.User
-import org.w3c.dom.Text
 import java.net.UnknownHostException
-import kotlin.math.log
 
 class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
     ISecondaryFragment, Profile.ProfileListener {
@@ -113,7 +110,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private lateinit var companionTimer: TextView
     private lateinit var droneTimer: TextView
     private lateinit var giantTimer: TextView
-    private val skillTimers = Array<Skill?>(Skill.values().size) { null }
+    private val inUseSkillTimers = Array<Skill?>(Skill.values().size) { null }
+    private val reuseSkillTimers = Array<Skill?>(Skill.values().size) { null }
 
     interface HomeListener {
         fun onMushroomClicked()
@@ -242,7 +240,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             }
         }
 
-        timeTravel = view.findViewById(R.id.time)
+        timeTravel = view.findViewById(R.id.time_travel)
         companion = view.findViewById(R.id.companion)
         drone = view.findViewById(R.id.drone)
         giant = view.findViewById(R.id.giant)
@@ -257,41 +255,62 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         drone.visibility = if(user.skills.contains(Skill.DRONE)) View.VISIBLE else View.GONE
         giant.visibility = if(user.skills.contains(Skill.GIANT)) View.VISIBLE else View.GONE
 
-        var pair = user.isSkillInUse(Skill.TIME)
-        timeTravelTimer.visibility = if(pair.first) {
-            monitorSkillTimer(Skill.TIME)
+        var pair = user.isSkillAvailable(Skill.TIME)
+        timeTravelTimer.visibility = if(!pair.first && user.skills.contains(Skill.TIME)) {
+            monitorInUseSkillTimer(Skill.TIME)
             View.VISIBLE
         } else View.GONE
 
-        pair = user.isSkillInUse(Skill.COMPANION)
-        companionTimer.visibility = if(pair.first) {
-            monitorSkillTimer(Skill.COMPANION)
+        pair = user.isSkillAvailable(Skill.COMPANION)
+        companionTimer.visibility = if(!pair.first && user.skills.contains(Skill.COMPANION)) {
+            monitorInUseSkillTimer(Skill.COMPANION)
             View.VISIBLE
         } else View.GONE
 
-        pair = user.isSkillInUse(Skill.DRONE)
-        droneTimer.visibility = if(pair.first) {
-            monitorSkillTimer(Skill.DRONE)
+        pair = user.isSkillAvailable(Skill.DRONE)
+        droneTimer.visibility = if(!pair.first && user.skills.contains(Skill.DRONE)) {
+            monitorInUseSkillTimer(Skill.DRONE)
             View.VISIBLE
         } else View.GONE
 
-        pair = user.isSkillInUse(Skill.GIANT)
-        giantTimer.visibility = if(pair.first) {
-            monitorSkillTimer(Skill.GIANT)
+        pair = user.isSkillAvailable(Skill.GIANT)
+        giantTimer.visibility = if(!pair.first && user.skills.contains(Skill.GIANT)) {
+            monitorInUseSkillTimer(Skill.GIANT)
             View.VISIBLE
         } else View.GONE
 
         val skillClickListener = View.OnClickListener {
             when(it.id){
                 R.id.giant -> {
+                    if(!user.isSkillAvailable(Skill.GIANT).first)return@OnClickListener
                     user.lastUsedGiant = Timestamp.now()
-                    monitorSkillTimer(Skill.GIANT)
+                    monitorInUseSkillTimer(Skill.GIANT)
+                    circle?.remove()
+                    circle = googleMap?.addCircle(getMyLocationCircle())
+                }
+                R.id.companion -> {
+                    if(!user.isSkillAvailable(Skill.COMPANION).first)return@OnClickListener
+                    user.lastUsedGiant = Timestamp.now()
+                    monitorInUseSkillTimer(Skill.COMPANION)
+                }
+                R.id.time_travel -> {
+                    if(!user.isSkillAvailable(Skill.TIME).first)return@OnClickListener
+                    user.lastUsedTimeTravel = Timestamp.now()
+                    monitorInUseSkillTimer(Skill.TIME)
+                }
+                R.id.drone -> {
+                    if(!user.isSkillAvailable(Skill.DRONE).first)return@OnClickListener
+                    user.lastUsedDrone = Timestamp.now()
+                    monitorInUseSkillTimer(Skill.DRONE)
                 }
             }
             user.update()
         }
 
         giant.setOnClickListener(skillClickListener)
+        companion.setOnClickListener(skillClickListener)
+        drone.setOnClickListener(skillClickListener)
+        timeTravel.setOnClickListener(skillClickListener)
 
         return view
     }
@@ -592,8 +611,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     private fun getSnippet(benchmark: Benchmark) : String{
-        return if (benchmark.lastVisited + SECONDS_TO_RECOLLECT > System.currentTimeMillis() / 1000) {
-            val secondsLeft = benchmark.lastVisited + SECONDS_TO_RECOLLECT - System.currentTimeMillis() / 1000
+        var now = Timestamp.now().seconds
+        if(user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect
+        return if (benchmark.lastVisited + SECONDS_TO_RECOLLECT > now) {
+            val secondsLeft = benchmark.lastVisited + SECONDS_TO_RECOLLECT - now
             "Collect in ${Converters.toCountdownFormat(secondsLeft)}"
         }else if(benchmark.lastVisited > 0) "Collected ${Converters.formatSeconds(benchmark.lastVisited)}"
         else "Never collected"
@@ -634,7 +655,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     // Chat-GPT wrote this function
-    private fun inProximity(meters: Double, latlng1: LatLng, latlng2: LatLng): Boolean {
+    private fun inProximity(meters: Int, latlng1: LatLng, latlng2: LatLng): Boolean {
         val R = 6371e3 // Earth's radius in meters
         val φ1 = Math.toRadians(latlng1.latitude)
         val φ2 = Math.toRadians(latlng2.latitude)
@@ -813,11 +834,15 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     private fun collected(benchmark: Benchmark) : Boolean{
-        return benchmark.lastVisited + SECONDS_TO_RECOLLECT > Timestamp.now().seconds
+        var now = Timestamp.now().seconds
+        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect
+        return now - benchmark.lastVisited < SECONDS_TO_RECOLLECT
     }
 
     private fun canCollect(benchmark: Benchmark) : Boolean{
-        return benchmark.lastVisited + SECONDS_TO_RECOLLECT < Timestamp.now().seconds
+        var now = Timestamp.now().seconds
+        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect
+        return now - benchmark.lastVisited > SECONDS_TO_RECOLLECT
     }
 
     @SuppressLint("MissingPermission")
@@ -942,12 +967,13 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             .fillColor(color)
             .strokeColor(Color.argb(0,0,0,0))
             .strokeWidth(0f)
-            .radius(user.getReach())
+            .radius(user.getReach().toDouble())
     }
 
-    private fun monitorSkillTimer(skill: Skill){
-        if(skillTimers.contains(skill)) return
-        skillTimers[skill.ordinal] = skill
+    private fun monitorInUseSkillTimer(skill: Skill){
+        if(inUseSkillTimers.contains(skill)) return
+        Log.d(TAG, "starting ${skill.name} in use timer thread")
+        inUseSkillTimers[skill.ordinal] = skill
         val timerTxt = when(skill){
             Skill.GIANT -> giantTimer
             Skill.DRONE -> droneTimer
@@ -960,17 +986,52 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         Thread{
             var pair = user.isSkillInUse(skill)
             while (pair.first){
-                Handler(Looper.getMainLooper()).post {
-                    timerTxt.text = Converters.toCountdownFormat(pair.second)
-                }
+                Handler(Looper.getMainLooper()).post { timerTxt.text = Converters.toCountdownFormat(pair.second) }
                 Thread.sleep(1000)
                 pair = user.isSkillInUse(skill)
             }
 
             Handler(Looper.getMainLooper()).post {
                 timerTxt.visibility = View.GONE
+                when(skill){
+                    Skill.GIANT -> {
+                        circle?.remove()
+                        circle = googleMap?.addCircle(getMyLocationCircle())
+                    }
+                    else -> {}
+                }
+
+                monitorReuseInSkillTimer(skill)
+                inUseSkillTimers[skill.ordinal] = null
+                Log.d(TAG, "exiting ${skill.name} in use timer thread")
             }
-            skillTimers[skill.ordinal] = null
+        }.start()
+    }
+
+    private fun monitorReuseInSkillTimer(skill: Skill){
+        if(reuseSkillTimers.contains(skill)) return
+        Log.d(TAG, "starting ${skill.name} reuse in timer thread")
+        reuseSkillTimers[skill.ordinal] = skill
+        val timerTxt = when(skill){
+            Skill.GIANT -> giantTimer
+            Skill.DRONE -> droneTimer
+            Skill.TIME -> timeTravelTimer
+            Skill.COMPANION -> companionTimer
+        }
+
+        timerTxt.visibility = View.VISIBLE
+
+        Thread{
+            var pair = user.isSkillAvailable(skill)
+            while (!pair.first){
+                Handler(Looper.getMainLooper()).post { timerTxt.text = Converters.toCountdownFormat(pair.second) }
+                Thread.sleep(1000)
+                pair = user.isSkillAvailable(skill)
+            }
+
+            Handler(Looper.getMainLooper()).post { timerTxt.visibility = View.GONE }
+            reuseSkillTimers[skill.ordinal] = null
+            Log.d(TAG, "exiting ${skill.name} reuse in timer thread")
         }.start()
     }
 

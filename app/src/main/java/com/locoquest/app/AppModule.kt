@@ -25,8 +25,8 @@ class AppModule : Application() {
         var db: DB? = null
         val guest: User = User("0","Guest")
         var user: User = guest
-        const val DEFAULT_REACH = 150.0
-        const val BOOSTED_REACH = 500.0
+        const val DEFAULT_REACH = 150
+        const val BOOSTED_REACH = 500
         const val BOOSTED_DURATION = 300
         val SECONDS_TO_RECOLLECT = if(DEBUG) 30 else 14400 // 4 hrs
 

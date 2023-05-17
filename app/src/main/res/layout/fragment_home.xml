@@ -175,7 +175,7 @@
         android:layout_height="wrap_content"/>
 
     <ImageView
-        android:id="@+id/time"
+        android:id="@+id/time_travel"
         android:src="@drawable/time_travel"
         android:layout_margin="8dp"
         app:layout_constraintBottom_toTopOf="@id/companion"
@@ -191,9 +191,9 @@
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:textAlignment="center"
-        app:layout_constraintBottom_toBottomOf="@id/time"
-        app:layout_constraintStart_toStartOf="@id/time"
-        app:layout_constraintEnd_toEndOf="@id/time"
+        app:layout_constraintBottom_toBottomOf="@id/time_travel"
+        app:layout_constraintStart_toStartOf="@id/time_travel"
+        app:layout_constraintEnd_toEndOf="@id/time_travel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
