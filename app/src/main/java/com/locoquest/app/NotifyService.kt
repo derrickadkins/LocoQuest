@@ -8,18 +8,11 @@ import android.app.job.JobService
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.room.Room
 import androidx.work.Configuration
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import com.locoquest.app.dao.DB
 import com.locoquest.app.dto.User
 
 class NotifyService: JobService() {
@@ -79,13 +72,19 @@ class NotifyService: JobService() {
             val name = p0.extras.getString("name", "")
             val available = p0.extras.getBoolean("available", false)
             val skill = Skill.values()[ordinal]
-            val contentText = if(skill == Skill.COMPANION && !available) {
+            var contentText = "$name is available to be used again"
+
+            if(skill == Skill.COMPANION && !available) {
                 val coinsCollected = p0.extras.getInt("coinsCollected")
-                addToBalance(coinsCollected)
-                "Companion collected ($coinsCollected) coins"
+                User.load(this){
+                    AppModule.user.balance += coinsCollected
+                    AppModule.user.update()
+                    AppModule.scheduleNotification(this, skill)
+                }
+                contentText = "Companion collected ($coinsCollected) coins"
+            }else if(!available) User.load(this){
+                AppModule.scheduleNotification(this, skill)
             }
-            else if(available) "$name is available to be used again"
-            else ""
 
             Log.d("notify receiver", "intent received for $name")
 
@@ -134,52 +133,6 @@ class NotifyService: JobService() {
 
     override fun onStopJob(p0: JobParameters?): Boolean {
         return false
-    }
-
-    private fun addToBalance(amount: Int){
-        if(AppModule.user.uid == Prefs(this).uid()){
-            AppModule.user.balance += amount
-            AppModule.user.update()
-            return
-        }
-        Thread{
-            AppModule.db = Room.databaseBuilder(this, DB::class.java, "db")
-                .fallbackToDestructiveMigration().build()
-            val currentUser = FirebaseAuth.getInstance().currentUser
-            if (currentUser != null)
-                AppModule.user = User(currentUser.uid)
-            Log.d("user", "Database loaded, switching to user:${AppModule.user.uid}")
-
-            val userDao = AppModule.db!!.localUserDAO()
-            val tmpUser = userDao.getUser(AppModule.user.uid)
-
-            if (tmpUser == null) {
-                userDao.insert(AppModule.user)
-            } else AppModule.user = tmpUser
-
-            Log.d("user", "user loaded from db; ${AppModule.user.dump()}")
-
-            if (AppModule.user.uid == AppModule.guest.uid) {
-                return@Thread
-            }
-
-            Firebase.firestore.collection("users").document(AppModule.user.uid)
-                .get()
-                .addOnSuccessListener {
-                    if (it.data == null) {
-                        AppModule.user.push()
-                        return@addOnSuccessListener
-                    }
-
-                    AppModule.user = User.pullUser(it)
-                }
-                .addOnFailureListener {
-                    AppModule.user.push()
-                }.addOnCompleteListener {
-                    AppModule.user.balance += amount
-                    AppModule.user.update()
-                }
-        }.start()
     }
 
     private fun createNotificationChannel(channelInfo: String) {
