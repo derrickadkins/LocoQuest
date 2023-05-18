@@ -13,6 +13,7 @@ import com.locoquest.app.AppModule
 import com.locoquest.app.AppModule.Companion.BOOSTED_REACH
 import com.locoquest.app.AppModule.Companion.DEFAULT_REACH
 import com.locoquest.app.AppModule.Companion.db
+import com.locoquest.app.AppModule.Companion.guest
 import com.locoquest.app.Skill
 import com.locoquest.app.Upgrade
 import kotlin.math.max
@@ -39,7 +40,7 @@ data class User(
 
     fun update(){
         Thread{ db?.localUserDAO()?.update(this) }.start()
-        push()
+        if(uid != guest.uid) push()
     }
 
     fun push(){
