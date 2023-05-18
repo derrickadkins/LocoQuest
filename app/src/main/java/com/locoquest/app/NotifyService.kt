@@ -8,11 +8,19 @@ import android.app.job.JobService
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.room.Room
 import androidx.work.Configuration
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.locoquest.app.dao.DB
+import com.locoquest.app.dto.User
 
 class NotifyService: JobService() {
 
@@ -67,7 +75,58 @@ class NotifyService: JobService() {
             notification.flags = notification.flags or Notification.FLAG_SHOW_LIGHTS
             notificationManagerCompat!!.notify(id.hashCode(), notification)
         }else if (p0.extras.containsKey("ordinal")){
-            
+            val ordinal = p0.extras.getInt("ordinal", -1)
+            val name = p0.extras.getString("name", "")
+            val available = p0.extras.getBoolean("available", false)
+            val skill = Skill.values()[ordinal]
+            val contentText = if(skill == Skill.COMPANION && !available) {
+                val coinsCollected = p0.extras.getInt("coinsCollected")
+                addToBalance(coinsCollected)
+                "Companion collected ($coinsCollected) coins"
+            }
+            else if(available) "$name is available to be used again"
+            else ""
+
+            Log.d("notify receiver", "intent received for $name")
+
+            createNotificationChannel(channels[0])
+            notificationManagerCompat = NotificationManagerCompat.from(this)
+
+            val contentIntent = Intent(this, MainActivity::class.java)
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                ordinal,
+                contentIntent,
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+            val resource = when(skill){
+                Skill.COMPANION -> R.drawable.spot
+                Skill.TIME -> R.drawable.time_travel
+                Skill.DRONE -> R.drawable.drone2
+                Skill.GIANT -> R.drawable.iron_giant
+            }
+
+            builder = NotificationCompat.Builder(this, channels[0])
+                .setSmallIcon(R.drawable.locoquest_notification_icon)
+                .setLargeIcon(
+                    BitmapFactory.decodeResource(
+                        this.resources,
+                        resource
+                    )
+                )
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setLights(this.getColor(R.color.blue), 1000, 1000)
+                .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setContentTitle("LocoQuest")
+                .setContentText(contentText)
+
+            val notification = builder!!.build()
+            notification.flags = notification.flags or Notification.FLAG_SHOW_LIGHTS
+            notificationManagerCompat!!.notify(ordinal, notification)
         }
 
         return true
@@ -75,6 +134,52 @@ class NotifyService: JobService() {
 
     override fun onStopJob(p0: JobParameters?): Boolean {
         return false
+    }
+
+    private fun addToBalance(amount: Int){
+        if(AppModule.user.uid == Prefs(this).uid()){
+            AppModule.user.balance += amount
+            AppModule.user.update()
+            return
+        }
+        Thread{
+            AppModule.db = Room.databaseBuilder(this, DB::class.java, "db")
+                .fallbackToDestructiveMigration().build()
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            if (currentUser != null)
+                AppModule.user = User(currentUser.uid)
+            Log.d("user", "Database loaded, switching to user:${AppModule.user.uid}")
+
+            val userDao = AppModule.db!!.localUserDAO()
+            val tmpUser = userDao.getUser(AppModule.user.uid)
+
+            if (tmpUser == null) {
+                userDao.insert(AppModule.user)
+            } else AppModule.user = tmpUser
+
+            Log.d("user", "user loaded from db; ${AppModule.user.dump()}")
+
+            if (AppModule.user.uid == AppModule.guest.uid) {
+                return@Thread
+            }
+
+            Firebase.firestore.collection("users").document(AppModule.user.uid)
+                .get()
+                .addOnSuccessListener {
+                    if (it.data == null) {
+                        AppModule.user.push()
+                        return@addOnSuccessListener
+                    }
+
+                    AppModule.user = User.pullUser(it)
+                }
+                .addOnFailureListener {
+                    AppModule.user.push()
+                }.addOnCompleteListener {
+                    AppModule.user.balance += amount
+                    AppModule.user.update()
+                }
+        }.start()
     }
 
     private fun createNotificationChannel(channelInfo: String) {
