@@ -984,6 +984,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         timerTxt.visibility = View.VISIBLE
 
         Thread{
+            scheduleNotification(requireContext(), skill)
             var pair = user.isSkillInUse(skill)
             while (pair.first){
                 Handler(Looper.getMainLooper()).post { timerTxt.text = Converters.toCountdownFormat(pair.second) }
@@ -1022,6 +1023,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         timerTxt.visibility = View.VISIBLE
 
         Thread{
+            scheduleNotification(requireContext(), skill)
             var pair = user.isSkillAvailable(skill)
             while (!pair.first){
                 Handler(Looper.getMainLooper()).post { timerTxt.text = Converters.toCountdownFormat(pair.second) }
