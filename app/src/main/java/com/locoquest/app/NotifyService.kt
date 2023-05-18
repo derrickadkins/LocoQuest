@@ -125,7 +125,8 @@ class NotifyService: JobService() {
 
             val notification = builder!!.build()
             notification.flags = notification.flags or Notification.FLAG_SHOW_LIGHTS
-            notificationManagerCompat!!.notify(ordinal, notification)
+            val id = if(available) ordinal else ordinal * -1
+            notificationManagerCompat!!.notify(id, notification)
         }
 
         return true
