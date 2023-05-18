@@ -80,6 +80,7 @@ class NotifyService: JobService() {
                     AppModule.user.balance += coinsCollected
                     AppModule.user.update()
                     AppModule.scheduleNotification(this, skill)
+                    listener?.onUpdateBalance()
                 }
                 contentText = "Companion collected ($coinsCollected) coins"
             }else if(!available) User.load(this){
@@ -158,5 +159,10 @@ class NotifyService: JobService() {
     companion object{
         private const val TAG = "NotifyService"
         private val channels = arrayOf("Coin", "Skill")
+
+        interface Listener{
+            fun onUpdateBalance()
+        }
+        var listener : Listener? = null
     }
 }
