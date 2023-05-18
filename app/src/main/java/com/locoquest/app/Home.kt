@@ -292,7 +292,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                 }
                 R.id.companion -> {
                     if(!user.isSkillAvailable(Skill.COMPANION).first)return@OnClickListener
-                    user.lastUsedGiant = Timestamp.now()
+                    user.lastUsedCompanion = Timestamp.now()
                     monitorInUseSkillTimer(Skill.COMPANION)
                 }
                 R.id.time_travel -> {
@@ -1025,7 +1025,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         timerTxt.visibility = View.VISIBLE
 
         Thread{
-            scheduleNotification(requireContext(), skill)
             var pair = user.isSkillAvailable(skill)
             while (!pair.first){
                 Handler(Looper.getMainLooper()).post { timerTxt.text = Converters.toCountdownFormat(pair.second) }
