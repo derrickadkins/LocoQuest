@@ -1001,9 +1001,9 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     else -> {}
                 }
 
-                monitorReuseInSkillTimer(skill)
                 inUseSkillTimers[skill.ordinal] = null
                 Log.d(TAG, "exiting ${skill.name} in use timer thread")
+                monitorReuseInSkillTimer(skill)
             }
         }.start()
     }
