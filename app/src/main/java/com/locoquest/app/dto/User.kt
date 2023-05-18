@@ -1,8 +1,12 @@
 package com.locoquest.app.dto
 
+import android.content.Context
+import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Room
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.GeoPoint
@@ -10,12 +14,14 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.locoquest.app.AppModule
-import com.locoquest.app.AppModule.Companion.BOOSTED_REACH
 import com.locoquest.app.AppModule.Companion.DEFAULT_REACH
 import com.locoquest.app.AppModule.Companion.db
 import com.locoquest.app.AppModule.Companion.guest
+import com.locoquest.app.Converters
+import com.locoquest.app.Prefs
 import com.locoquest.app.Skill
 import com.locoquest.app.Upgrade
+import com.locoquest.app.dao.DB
 import kotlin.math.max
 
 @Entity
@@ -87,7 +93,10 @@ data class User(
     }
 
     fun isSkillAvailable(skill: Skill): Pair<Boolean, Long>{
-        if(!skills.contains(skill)) return Pair(false, 0)
+        if(!skills.contains(skill)) {
+            Log.d(TAG, "${skill.name} is not available because user does not have it")
+            return Pair(false, 0)
+        }
         var reuseIn = skill.reuseIn
         val upgrade = when(skill){
             Skill.GIANT -> Upgrade.GIANT_CHARGE
@@ -98,11 +107,15 @@ data class User(
         if(upgrades.contains(upgrade)) reuseIn += upgrade.effect
         val availableIn = lastUsedSkill(skill) + skill.duration + reuseIn - Timestamp.now().seconds
         val isAvailable = availableIn < 0
+        Log.d(TAG, "${skill.name} available:$isAvailable, available in ${Converters.toCountdownFormat(availableIn)}")
         return Pair(isAvailable, availableIn)
     }
 
     fun isSkillInUse(skill: Skill): Pair<Boolean, Long>{
-        if(!skills.contains(skill)) return Pair(false, 0)
+        if(!skills.contains(skill)) {
+            Log.d(TAG, "${skill.name} is not available because user does not have it")
+            return Pair(false, 0)
+        }
         var duration = skill.duration
         val upgrade = when(skill){
             Skill.GIANT -> Upgrade.GIANT_BATT
@@ -113,7 +126,10 @@ data class User(
         upgrade?.let { if(upgrades.contains(it)) duration += it.effect }
         val lastUsed = lastUsedSkill(skill)
         val now = Timestamp.now().seconds
-        return Pair(now - lastUsed < duration, duration - (now - lastUsed))
+        val inUse = now - lastUsed < duration
+        val reuseIn = lastUsed + duration - now
+        Log.d(TAG, "${skill.name} in use ($now - $lastUsed < $duration):$inUse, finished in:${Converters.toCountdownFormat(reuseIn)}")
+        return Pair(inUse, reuseIn)
     }
 
     fun getReach(): Int {
@@ -133,6 +149,52 @@ data class User(
     }
 
     companion object{
+        private const val TAG = "User"
+        fun load(context: Context, callback: () -> Unit){
+            if(AppModule.user.uid == Prefs(context).uid()){
+                callback()
+                return
+            }
+            Thread{
+                db = Room.databaseBuilder(context, DB::class.java, "db")
+                    .fallbackToDestructiveMigration().build()
+                val currentUser = FirebaseAuth.getInstance().currentUser
+                if (currentUser != null)
+                    AppModule.user = User(currentUser.uid)
+                Log.d("user", "Database loaded, switching to user:${AppModule.user.uid}")
+
+                val userDao = db!!.localUserDAO()
+                val tmpUser = userDao.getUser(AppModule.user.uid)
+
+                if (tmpUser == null) {
+                    userDao.insert(AppModule.user)
+                } else AppModule.user = tmpUser
+
+                Log.d("user", "user loaded from db; ${AppModule.user.dump()}")
+
+                if (AppModule.user.uid == AppModule.guest.uid) {
+                    return@Thread
+                }
+
+                Firebase.firestore.collection("users").document(AppModule.user.uid)
+                    .get()
+                    .addOnSuccessListener {
+                        if (it.data == null) {
+                            AppModule.user.push()
+                            return@addOnSuccessListener
+                        }
+
+                        AppModule.user = pullUser(it)
+                    }
+                    .addOnFailureListener {
+                        AppModule.user.push()
+                    }.addOnCompleteListener {
+                        callback()
+                        //todo - update user here?
+                    }
+            }.start()
+        }
+
         fun pullUser(it: DocumentSnapshot) : User{
             val name =
                 if (it["name"] == null) AppModule.user.displayName else it["name"] as String
