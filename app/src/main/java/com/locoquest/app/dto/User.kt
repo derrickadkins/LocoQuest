@@ -95,8 +95,9 @@ data class User(
             Skill.DRONE -> Upgrade.DRONE_CHARGE
         }
         if(upgrades.contains(upgrade)) reuseIn += upgrade.effect
-        val availableIn = Timestamp.now().seconds - lastUsedSkill(skill) + skill.duration + reuseIn
-        val isAvailable = availableIn < 0
+        val lastUsed = lastUsedSkill(skill)
+        val availableIn = Timestamp.now().seconds - lastUsed + skill.duration + reuseIn
+        val isAvailable = if(lastUsed == 0L) true else availableIn < 0
         return Pair(isAvailable, availableIn)
     }
 
