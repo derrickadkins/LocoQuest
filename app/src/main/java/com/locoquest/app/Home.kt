@@ -90,6 +90,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private var notifyUserOfNetwork = true
     private var markerToBenchmark: HashMap<Marker, Benchmark> = HashMap()
     private var benchmarkToMarker: HashMap<Benchmark, Marker> = HashMap()
+    private lateinit var prefs: Prefs
     private lateinit var notifyFab: FloatingActionButton
     private lateinit var userImg: ImageView
     private lateinit var offlineImg: ImageView
@@ -120,6 +121,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        prefs = Prefs(requireContext())
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
     }
 
@@ -172,19 +174,19 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             Log.d("tracker", "layer selected")
             when(it.id){
                 R.id.normalLayerFab -> {
-                    mapType(GoogleMap.MAP_TYPE_NORMAL)
+                    prefs.mapType(GoogleMap.MAP_TYPE_NORMAL)
                 }
                 R.id.hybridLayerFab -> {
-                    mapType(GoogleMap.MAP_TYPE_HYBRID)
+                    prefs.mapType(GoogleMap.MAP_TYPE_HYBRID)
                 }
                 R.id.satelliteLayerFab -> {
-                    mapType(GoogleMap.MAP_TYPE_SATELLITE)
+                    prefs.mapType(GoogleMap.MAP_TYPE_SATELLITE)
                 }
                 R.id.terrainLayerFab -> {
-                    mapType(GoogleMap.MAP_TYPE_TERRAIN)
+                    prefs.mapType(GoogleMap.MAP_TYPE_TERRAIN)
                 }
             }
-            googleMap?.mapType = mapType()
+            googleMap?.mapType = prefs.mapType()
             layersFab.performClick()
         }
 
@@ -362,7 +364,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         map.uiSettings.isZoomGesturesEnabled = false
         map.uiSettings.isRotateGesturesEnabled = false
         map.uiSettings.isTiltGesturesEnabled = false
-        map.mapType = mapType()
+        map.mapType = prefs.mapType()
         map.setOnMarkerClickListener(this)
         map.setOnCameraIdleListener {
             Log.d("tracker", "camera stopped moving, loading markers")
@@ -412,7 +414,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
         if(!hasLocationPermissions() || !isGpsOn()) return false
 
-        val lastLocation = lastLocation()
+        val lastLocation = prefs.lastLocation()
         val inProximity = if(DEBUG) true
             else inProximity(user.getReach(), marker.position, LatLng(lastLocation.latitude, lastLocation.longitude))
 
@@ -549,7 +551,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     fun switchUser() {
         if (switchingUser) return
         Thread {
@@ -594,6 +595,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                         loadMarkers(true)
                     }.addOnCompleteListener {
                         //home.balance.text = user.balance.toString()
+                        prefs.uid(user.uid)
                         displayUserInfo()
                         Log.d("user", "user switched; ${user.dump()}")
                         switchingUser = false
@@ -674,7 +676,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     private fun loadMarkers(){loadMarkers(false)}
-    fun loadMarkers(isUserSwitched: Boolean) {
+    private fun loadMarkers(isUserSwitched: Boolean) {
         try {
             Log.d("tracker", "loading markers")
             goToSelectedBenchmark()
@@ -913,7 +915,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private fun updateCameraWithLastLocation(){updateCameraWithLastLocation(true)}
     fun updateCameraWithLastLocation(animate: Boolean) {
         Log.d("tracker", "moving camera to last location")
-        val lastLocation = lastLocation()
+        val lastLocation = prefs.lastLocation()
         if (lastLocation.provider == "" || googleMap == null || cameraIsBeingMoved) return
         cameraIsBeingMoved = true
         val cameraUpdate = CameraUpdateFactory.newLatLngZoom(LatLng(lastLocation.latitude, lastLocation.longitude), DEFAULT_ZOOM)
@@ -947,7 +949,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         override fun onLocationResult(locationResult: LocationResult) {
             Log.d("tracker", "got location update")
             locationResult.lastLocation.let { location ->
-                lastLocation(location)
+                prefs.lastLocation(location)
                 circle?.remove()
                 circle = googleMap?.addCircle(getMyLocationCircle())
                 if (!tracking) return
@@ -958,7 +960,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     private fun getMyLocationCircle() : CircleOptions{
-        val loc = lastLocation()
+        val loc = prefs.lastLocation()
         val isBoosted = user.isSkillInUse(Skill.GIANT).first
         val color = if(isBoosted) Color.argb(50, 255, 255, 0)
         else Color.argb(50, 0, 0, 255)
@@ -1041,37 +1043,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         val benchmark = markerToBenchmark[selectedMarker]!!
         if(collected(benchmark)) scheduleNotification(requireContext(), benchmark)
         notifyFab.setImageResource(R.drawable.notifications_active)
-    }
-
-    private fun prefs(): SharedPreferences {
-        return requireContext().getSharedPreferences("LocoQuest", Context.MODE_PRIVATE)
-    }
-
-    private fun lastLocation(location: Location){
-        with (prefs().edit()) {
-            putFloat("lat", location.latitude.toFloat())
-            putFloat("lon", location.longitude.toFloat())
-            putString("provider", location.provider)
-            apply()
-        }
-    }
-
-    private fun lastLocation() : Location {
-        val location = Location(prefs().getString("provider", ""))
-        location.latitude = prefs().getFloat("lat", 0f).toDouble()
-        location.longitude = prefs().getFloat("lon", 0f).toDouble()
-        return location
-    }
-
-    private fun mapType(type: Int){
-        with (prefs().edit()) {
-            putInt("mapType", type)
-            apply()
-        }
-    }
-
-    private fun mapType() : Int {
-        return prefs().getInt("mapType", GoogleMap.MAP_TYPE_NORMAL)
     }
 
     companion object{
