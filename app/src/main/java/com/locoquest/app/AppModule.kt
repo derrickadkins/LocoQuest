@@ -55,9 +55,21 @@ class AppModule : Application() {
             extras.putInt("ordinal", skill.ordinal)
             extras.putString("name", skill.name)
             val (inUse, secondsLeft) = user.isSkillInUse(skill)
-            val delayMillis = if(inUse) secondsLeft * 1000 else{
+            val delayMillis = if(inUse) {
+                if(skill == Skill.COMPANION) {
+                    var coinsCollected = Skill.COMPANION.effect
+                    if(user.upgrades.contains(Upgrade.COMPANION_MOTOR))
+                        coinsCollected += Upgrade.COMPANION_MOTOR.effect
+                    extras.putInt("coinsCollected", coinsCollected)
+                }
+                extras.putBoolean("available", false)
+                secondsLeft * 1000
+            } else{
                 val (available, secondsUntil) = user.isSkillAvailable(skill)
-                if(!available) secondsUntil * 1000
+                if(!available) {
+                    extras.putBoolean("available", true)
+                    secondsUntil * 1000
+                }
                 else -1
             }
             if (delayMillis < 0) return
