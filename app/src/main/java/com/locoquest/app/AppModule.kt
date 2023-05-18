@@ -22,6 +22,7 @@ class AppModule : Application() {
         const val DEBUG = false
         //////////////////////////////////////
 
+        private const val TAG = "AppModule"
         var db: DB? = null
         val guest: User = User("0","Guest")
         var user: User = guest
@@ -42,7 +43,9 @@ class AppModule : Application() {
                 .setPersisted(true)
                 .setExtras(extras)
 
-            jobScheduler.schedule(jobInfoBuilder.build())
+            val result = jobScheduler.schedule(jobInfoBuilder.build())
+            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully")
+            else Log.d(TAG, "job failed to schedule")
         }
 
         fun cancelNotification(context: Context, benchmark: Benchmark) {
@@ -80,7 +83,9 @@ class AppModule : Application() {
                 .setPersisted(true)
                 .setExtras(extras)
 
-            jobScheduler.schedule(jobInfoBuilder.build())
+            val result = jobScheduler.schedule(jobInfoBuilder.build())
+            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully")
+            else Log.d(TAG, "job failed to schedule")
         }
 
         fun cancelNotification(context: Context, skill: Skill){
