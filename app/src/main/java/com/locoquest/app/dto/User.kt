@@ -95,14 +95,13 @@ data class User(
             Skill.DRONE -> Upgrade.DRONE_CHARGE
         }
         if(upgrades.contains(upgrade)) reuseIn += upgrade.effect
-        val lastUsed = lastUsedSkill(skill)
-        val availableIn = Timestamp.now().seconds - lastUsed + skill.duration + reuseIn
-        val isAvailable = if(lastUsed == 0L) true else availableIn < 0
+        val availableIn = lastUsedSkill(skill) + skill.duration + reuseIn - Timestamp.now().seconds
+        val isAvailable = availableIn < 0
         return Pair(isAvailable, availableIn)
     }
 
     fun isSkillInUse(skill: Skill): Pair<Boolean, Long>{
-        if(!isSkillAvailable(skill).first) return Pair(false, 0)
+        if(!skills.contains(skill)) return Pair(false, 0)
         var duration = skill.duration
         val upgrade = when(skill){
             Skill.GIANT -> Upgrade.GIANT_BATT
