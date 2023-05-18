@@ -49,5 +49,31 @@ class AppModule : Application() {
             val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
             jobScheduler.cancel(benchmark.pid.hashCode())
         }
+
+        fun scheduleNotification(context: Context, skill: Skill){
+            val extras = PersistableBundle()
+            extras.putInt("ordinal", skill.ordinal)
+            extras.putString("name", skill.name)
+            val (inUse, secondsLeft) = user.isSkillInUse(skill)
+            val delayMillis = if(inUse) secondsLeft * 1000 else{
+                val (available, secondsUntil) = user.isSkillAvailable(skill)
+                if(!available) secondsUntil * 1000
+                else -1
+            }
+            if (delayMillis < 0) return
+            val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            val jobInfoBuilder = JobInfo.Builder(skill.ordinal, ComponentName(context, NotifyService::class.java))
+                .setMinimumLatency(delayMillis)
+                .setOverrideDeadline(delayMillis + 1000)
+                .setPersisted(true)
+                .setExtras(extras)
+
+            jobScheduler.schedule(jobInfoBuilder.build())
+        }
+
+        fun cancelNotification(context: Context, skill: Skill){
+            val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+            jobScheduler.cancel(skill.ordinal)
+        }
     }
 }
