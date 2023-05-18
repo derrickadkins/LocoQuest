@@ -44,7 +44,7 @@ class AppModule : Application() {
                 .setExtras(extras)
 
             val result = jobScheduler.schedule(jobInfoBuilder.build())
-            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully")
+            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully, delaySeconds:${delayMillis/1000}")
             else Log.d(TAG, "job failed to schedule")
         }
 
@@ -84,7 +84,7 @@ class AppModule : Application() {
                 .setExtras(extras)
 
             val result = jobScheduler.schedule(jobInfoBuilder.build())
-            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully")
+            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully, delaySeconds:${delayMillis/1000}")
             else Log.d(TAG, "job failed to schedule")
         }
 
