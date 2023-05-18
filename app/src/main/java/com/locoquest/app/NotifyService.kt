@@ -25,8 +25,8 @@ class NotifyService: JobService() {
         val config = Configuration.Builder()
         config.setJobSchedulerJobIdRange(0, 1000)
 
-        val id = p0?.extras?.get("pid") as String? ?: 0
-        val name = p0?.extras?.get("name") as String?
+        val id = p0?.extras?.getString("pid", "")
+        val name = p0?.extras?.getString("name", "")
         val contentText = if (name == null) "Coin is available to be collected again"
         else "Coin ($name) is available to be collected again"
 
