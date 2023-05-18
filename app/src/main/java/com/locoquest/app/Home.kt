@@ -72,7 +72,7 @@ import com.locoquest.app.dto.User
 import java.net.UnknownHostException
 
 class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
-    ISecondaryFragment, Profile.ProfileListener {
+    ISecondaryFragment, Profile.ProfileListener, NotifyService.Companion.Listener {
 
     var selectedBenchmark: Benchmark? = null
     private var switchingUser = false
@@ -334,7 +334,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         notifyUserOfNetwork = true
 
         balance.text = user.balance.toString()
-        // todo - start and monitor timers/UI
+        NotifyService.listener = this
     }
 
     override fun onPause() {
@@ -342,6 +342,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         Log.d("tracker", "pausing")
         stopLocationUpdates()
         mapFragment?.onPause()
+        NotifyService.listener = null
     }
 
     override fun onDestroy() {
@@ -447,15 +448,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         return true
     }
 
-    private fun scheduleSetMarkerIcon(marker: Marker, benchmark: Benchmark){
-        Handler(Looper.getMainLooper()).postDelayed({
-            try{
-                marker.setIcon(getMarkerRes(benchmark))
-                if(collected(benchmark)) scheduleSetMarkerIcon(marker, benchmark)
-            }catch (e: Exception){
-                Log.e("marker set icon", e.toString())
-            }
-        }, (SECONDS_TO_RECOLLECT * 1000 / 7).toLong())
+    override fun onUpdateBalance() {
+        balance.text = user.balance.toString()
     }
 
     override fun onClose(fragment: Fragment) {
@@ -542,6 +536,17 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
                 override fun onLoadCleared(placeholder: Drawable?) {}
             })
+    }
+
+    private fun scheduleSetMarkerIcon(marker: Marker, benchmark: Benchmark){
+        Handler(Looper.getMainLooper()).postDelayed({
+            try{
+                marker.setIcon(getMarkerRes(benchmark))
+                if(collected(benchmark)) scheduleSetMarkerIcon(marker, benchmark)
+            }catch (e: Exception){
+                Log.e("marker set icon", e.toString())
+            }
+        }, (SECONDS_TO_RECOLLECT * 1000 / 7).toLong())
     }
 
     private fun updateProgress(){
