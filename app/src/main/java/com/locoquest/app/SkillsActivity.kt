@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.firebase.Timestamp
+import com.locoquest.app.AppModule.Companion.cancelNotification
 import com.locoquest.app.AppModule.Companion.user
 
 class SkillsActivity : AppCompatActivity() {
@@ -173,6 +174,8 @@ class SkillsActivity : AppCompatActivity() {
             drone.visibility = View.VISIBLE
             giant.visibility = View.VISIBLE
             time.visibility = View.VISIBLE
+
+            Skill.values().forEach { cancelNotification(this, it) }
         }
     }
 }
