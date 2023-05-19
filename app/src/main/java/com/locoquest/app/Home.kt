@@ -84,7 +84,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private var mapFragment: SupportMapFragment? = null
     private var tracking = true
     private var monitoringSelectedMarker = false
-    private var monitoringBoost = false
     private var loadingMarkers = false
     private var cameraIsBeingMoved = false
     private var notifyUserOfNetwork = true
@@ -94,8 +93,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private lateinit var notifyFab: FloatingActionButton
     private lateinit var userImg: ImageView
     private lateinit var offlineImg: ImageView
-    private lateinit var mushroom: ImageView
-    private lateinit var timerTxt: TextView
     private lateinit var userLvl: TextView
     private lateinit var userName: TextView
     private lateinit var userExperience: ProgressBar
