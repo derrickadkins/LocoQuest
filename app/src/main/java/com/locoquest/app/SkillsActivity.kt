@@ -11,6 +11,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.firebase.Timestamp
 import com.locoquest.app.AppModule.Companion.cancelNotification
 import com.locoquest.app.AppModule.Companion.user
+import kotlin.math.pow
 
 class SkillsActivity : AppCompatActivity() {
 
@@ -19,6 +20,9 @@ class SkillsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_skills)
         supportActionBar?.title = "Skills"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        val resetCost = findViewById<TextView>(R.id.reset_skill_cost)
+        resetCost.text = calcResetCost().toString()
 
         val skillPts = findViewById<TextView>(R.id.skill_pts)
         skillPts.text = "Skill Points: ${user.skillPoints}"
@@ -132,6 +136,8 @@ class SkillsActivity : AppCompatActivity() {
             user.skillPoints--
             skillPts.text = "Skill Points: ${user.skillPoints}"
             user.update()
+
+            resetCost.text = calcResetCost().toString()
         }
 
         companion.setOnClickListener(unlockListener)
@@ -153,15 +159,13 @@ class SkillsActivity : AppCompatActivity() {
 
         timeCharge.setOnClickListener(unlockListener)
 
-        fun calcResetCost() : Int {
-            return if (AppModule.DEBUG) 0 else (user.balance * .2).toInt()
-        }
-
-        val resetCost = findViewById<TextView>(R.id.reset_skill_cost)
-        resetCost.text = calcResetCost().toString()
-
         val reset = findViewById<Button>(R.id.reset_skills)
         reset.setOnClickListener{
+            if(calcResetCost() > user.balance){
+                Toast.makeText(this, "Not enough coins", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             user.lastUsedGiant = Timestamp(0,0)
             user.lastUsedCompanion = Timestamp(0,0)
             user.lastUsedDrone = Timestamp(0,0)
@@ -198,5 +202,17 @@ class SkillsActivity : AppCompatActivity() {
 
             Skill.values().forEach { cancelNotification(this, it) }
         }
+    }
+
+    private fun calcResetCost(): Int {
+        //return if (AppModule.DEBUG) 0 else (user.balance * .2).toInt()
+        if (AppModule.DEBUG) return 0
+
+        val baseCostPerPoint = 10 // Adjust this value based on your game's balance
+        val scalingFactor = 1.5 // Adjust this value as needed
+        val skillPointsSpent = user.skills.size + user.upgrades.size
+        val costPerPoint =
+            (baseCostPerPoint * scalingFactor.pow(skillPointsSpent.toDouble())).toInt()
+        return ((user.balance / Level.values().size) * skillPointsSpent).toInt() + costPerPoint * skillPointsSpent
     }
 }
