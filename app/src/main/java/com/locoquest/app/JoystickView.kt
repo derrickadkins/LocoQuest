@@ -89,7 +89,7 @@ class JoystickView @JvmOverloads constructor(
                 invalidate()
 
                 val xPercent = (innerCircleCenter.x - outerCircleCenter.x) / outerCircleRadius
-                val yPercent = (innerCircleCenter.y - outerCircleCenter.y) / outerCircleRadius
+                val yPercent = ((innerCircleCenter.y - outerCircleCenter.y) / outerCircleRadius) * -1
                 this.xPercent = xPercent
                 this.yPercent = yPercent
                 onJoystickMoveListener?.onJoystickMove(xPercent, yPercent)
