@@ -131,18 +131,6 @@ class Profile(private val user: User,
         }
         updateProgress()
 
-        val lvlUp = view.findViewById<Button>(R.id.level_up_btn)
-        lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
-        lvlUp.setOnClickListener {
-            user.skillPoints++
-            user.level++
-            levelTxt.text = user.level.toString()
-            lvlProgression.text = "${user.experience}/${Level.getLimits(user.level).second}"
-            updateProgress()
-            lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
-            user.update()
-        }
-
         val skillPointsLayout = view.findViewById<FrameLayout>(R.id.skillPoints_layout)
         //skillPointsLayout.visibility = if(user.skillPoints > 0) View.VISIBLE else View.GONE
 
@@ -152,6 +140,19 @@ class Profile(private val user: User,
         val spendSkillPoints = view.findViewById<Button>(R.id.spend_skillPoints)
         spendSkillPoints.setOnClickListener {
             startActivity(Intent(requireContext(), SkillsActivity::class.java))
+        }
+
+        val lvlUp = view.findViewById<Button>(R.id.level_up_btn)
+        lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+        lvlUp.setOnClickListener {
+            user.skillPoints++
+            user.level++
+            levelTxt.text = user.level.toString()
+            skillPoints.text = user.skillPoints.toString()
+            lvlProgression.text = "${user.experience}/${Level.getLimits(user.level).second}"
+            updateProgress()
+            lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+            user.update()
         }
 
         view.findViewById<FrameLayout>(R.id.profile_bg).setOnTouchListener { _, _ -> true }

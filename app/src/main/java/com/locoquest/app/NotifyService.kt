@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.Configuration
 import com.locoquest.app.dto.User
+import kotlin.random.Random
 
 class NotifyService: JobService() {
 
@@ -58,7 +59,7 @@ class NotifyService: JobService() {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setLights(this.getColor(R.color.blue), 1000, 1000)
-                .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                //.setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
                 .setContentTitle("LocoQuest")
@@ -74,22 +75,28 @@ class NotifyService: JobService() {
             val skill = Skill.values()[ordinal]
             var contentText = "$name is available to be used again"
 
-            if(skill == Skill.COMPANION && !available) {
-                val coinsCollected = p0.extras.getInt("coinsCollected")
-                User.load(this){
-                    AppModule.user.balance += coinsCollected
-                    AppModule.user.update()
+            if(!available) {
+                if (skill == Skill.COMPANION) {
+                    val minCoinsCollected = p0.extras.getInt("coinsCollected")
+                    val coinsCollected = Random.nextInt(minCoinsCollected, minCoinsCollected * 2)
+                    User.load(this) {
+                        AppModule.user.balance += coinsCollected
+                        AppModule.user.update()
+                        AppModule.scheduleNotification(this, skill)
+                        listener?.onUpdateBalance()
+                        jobFinished(p0, false)
+                    }
+                    contentText = "Companion collected ($coinsCollected) coins"
+                } else User.load(this) {
                     AppModule.scheduleNotification(this, skill)
-                    listener?.onUpdateBalance()
                 }
-                contentText = "Companion collected ($coinsCollected) coins"
-            }else if(!available) User.load(this){
-                AppModule.scheduleNotification(this, skill)
+            }else if(skill != Skill.COMPANION){
+                return false
             }
 
             Log.d("notify receiver", "intent received for $name")
 
-            createNotificationChannel(channels[0])
+            createNotificationChannel(channels[1])
             notificationManagerCompat = NotificationManagerCompat.from(this)
 
             val contentIntent = Intent(this, MainActivity::class.java)
@@ -118,7 +125,7 @@ class NotifyService: JobService() {
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setLights(this.getColor(R.color.blue), 1000, 1000)
-                .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
+                //.setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
                 .setContentTitle("LocoQuest")

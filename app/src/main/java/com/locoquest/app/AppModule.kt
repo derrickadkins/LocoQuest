@@ -84,8 +84,8 @@ class AppModule : Application() {
                 .setExtras(extras)
 
             val result = jobScheduler.schedule(jobInfoBuilder.build())
-            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully, delaySeconds:${delayMillis/1000}")
-            else Log.d(TAG, "job failed to schedule")
+            if(result == JobScheduler.RESULT_SUCCESS) Log.d(TAG, "job scheduled successfully, delaySeconds:${delayMillis/1000}; extras:$extras")
+            else Log.d(TAG, "job failed to schedule; extras:$extras")
         }
 
         fun cancelNotification(context: Context, skill: Skill){

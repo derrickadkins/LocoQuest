@@ -22,6 +22,7 @@ import com.locoquest.app.Prefs
 import com.locoquest.app.Skill
 import com.locoquest.app.Upgrade
 import com.locoquest.app.dao.DB
+import java.lang.Exception
 import kotlin.math.max
 
 @Entity
@@ -45,7 +46,15 @@ data class User(
 ){
 
     fun update(){
-        Thread{ db?.localUserDAO()?.update(this) }.start()
+        Thread{
+            try {
+                db?.localUserDAO()?.update(this)
+            } catch (e: ConcurrentModificationException){
+                Log.e(TAG, "ConcurrentModificationException:$e")
+            } catch (ex: Exception){
+                Log.e(TAG, "$ex")
+            }
+        }.start()
         if(uid != guest.uid) push()
     }
 

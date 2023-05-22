@@ -39,7 +39,7 @@ class SkillsActivity : AppCompatActivity() {
         val time = findViewById<Button>(R.id.unlock_time)
         
         val companionBatt = findViewById<Button>(R.id.unlock_companion_batt)
-        val companionCharge = findViewById<Button>(R.id.unlock_companion_batt)
+        val companionCharge = findViewById<Button>(R.id.unlock_companion_charger)
         val companionMotor = findViewById<Button>(R.id.unlock_companion_motors)
         
         val droneBatt = findViewById<Button>(R.id.unlock_drone_batt)
@@ -153,22 +153,43 @@ class SkillsActivity : AppCompatActivity() {
 
         timeCharge.setOnClickListener(unlockListener)
 
-        findViewById<Button>(R.id.reset_skills).setOnClickListener{
+        fun calcResetCost() : Int {
+            return if (AppModule.DEBUG) 0 else (user.balance * .2).toInt()
+        }
+
+        val resetCost = findViewById<TextView>(R.id.reset_skill_cost)
+        resetCost.text = calcResetCost().toString()
+
+        val reset = findViewById<Button>(R.id.reset_skills)
+        reset.setOnClickListener{
             user.lastUsedGiant = Timestamp(0,0)
             user.lastUsedCompanion = Timestamp(0,0)
             user.lastUsedDrone = Timestamp(0,0)
             user.lastUsedTimeTravel = Timestamp(0,0)
             user.skillPoints += user.skills.size + user.upgrades.size
+            user.balance -= calcResetCost()
             user.skills.clear()
             user.upgrades.clear()
             user.update()
 
             skillPts.text = "Skill Points: ${user.skillPoints}"
+            resetCost.text = calcResetCost().toString()
 
             companionUpgrades.visibility = View.GONE
             droneUpgrades.visibility = View.GONE
             giantUpgrades.visibility = View.GONE
             timeUpgrades.visibility = View.GONE
+
+            companionBatt.visibility = View.VISIBLE
+            companionCharge.visibility = View.VISIBLE
+            companionMotor.visibility = View.VISIBLE
+            droneBatt.visibility = View.VISIBLE
+            droneCharge.visibility = View.VISIBLE
+            droneMotor.visibility = View.VISIBLE
+            giantBatt.visibility = View.VISIBLE
+            giantCharge.visibility = View.VISIBLE
+            giantReach.visibility = View.VISIBLE
+            timeCharge.visibility = View.VISIBLE
 
             companion.visibility = View.VISIBLE
             drone.visibility = View.VISIBLE
