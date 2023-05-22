@@ -7,11 +7,9 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import android.location.Location
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -30,6 +28,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.fragment.app.Fragment
@@ -50,9 +49,11 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -108,6 +109,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private lateinit var companionTimer: TextView
     private lateinit var droneTimer: TextView
     private lateinit var giantTimer: TextView
+    private lateinit var droneLayout: ConstraintLayout
+    private lateinit var joystick: JoystickView
     private val inUseSkillTimers = Array<Skill?>(Skill.values().size) { null }
     private val reuseSkillTimers = Array<Skill?>(Skill.values().size) { null }
 
@@ -241,7 +244,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
         timeTravel = view.findViewById(R.id.time_travel)
         companion = view.findViewById(R.id.companion)
-        drone = view.findViewById(R.id.drone)
+        drone = view.findViewById(R.id.drone_skill)
         giant = view.findViewById(R.id.giant)
 
         timeTravelTimer = view.findViewById(R.id.time_timer)
@@ -297,10 +300,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     user.lastUsedTimeTravel = Timestamp.now()
                     monitorInUseSkillTimer(Skill.TIME)
                 }
-                R.id.drone -> {
+                R.id.drone_skill -> {
                     if(!user.isSkillAvailable(Skill.DRONE).first)return@OnClickListener
                     user.lastUsedDrone = Timestamp.now()
                     monitorInUseSkillTimer(Skill.DRONE)
+                    droneLayout.visibility = View.VISIBLE
                 }
             }
             user.update()
@@ -311,7 +315,73 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         drone.setOnClickListener(skillClickListener)
         timeTravel.setOnClickListener(skillClickListener)
 
+        droneLayout = view.findViewById(R.id.drone_layout)
+        joystick = view.findViewById(R.id.joystick)
+        joystick.setOnJoystickMoveListener(object : JoystickView.OnJoystickMoveListener {
+            override fun onJoystickMove(xPercent: Float, yPercent: Float) {
+                if (user.isSkillInUse(Skill.DRONE).first) monitorJoystick()
+            }
+            override fun onJoystickRelease() {monitorJoystick = false}
+        })
+
         return view
+    }
+
+    var monitorJoystick = false
+    private fun monitorJoystick(){
+        if(monitorJoystick) return
+        monitorJoystick = true
+        Thread{
+            while(monitorJoystick){
+                val map = googleMap ?: return@Thread
+                var maxCameraSpeed = Skill.DRONE.effect
+                if(user.upgrades.contains(Upgrade.DRONE_MOTOR)) maxCameraSpeed += Upgrade.DRONE_MOTOR.effect
+
+                Handler(Looper.getMainLooper()).post {
+                    Log.d(TAG, "x:${joystick.xPercent};y:${joystick.yPercent}")
+                    val cameraSpeedX = joystick.xPercent * maxCameraSpeed
+                    val cameraSpeedY = joystick.yPercent * maxCameraSpeed
+
+                    map.moveCamera(
+                        CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder()
+                                .target(
+                                    LatLng(
+                                        map.cameraPosition.target.latitude + cameraSpeedY,
+                                        map.cameraPosition.target.longitude + cameraSpeedX
+                                    )
+                                )
+                                .zoom(map.cameraPosition.zoom)
+                                .build()
+                        )
+                    )
+
+                    val coins = getMarkersWithinRadius(map.cameraPosition.target, 100, markerToBenchmark.values)
+                    coins.forEach { c ->
+                        if (!user.visited.contains(c.pid) || (user.visited.contains(c.pid) && canCollect(c))) {
+                            val marker = benchmarkToMarker[c]!!
+                            c.lastVisited = Timestamp.now().seconds
+                            markerToBenchmark[marker] = c
+                            user.visited[c.pid] = c
+                            user.balance++
+                            user.experience++
+                            balance.text = user.balance.toString()
+                            updateProgress()
+                            user.update()
+                            marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.hour_glass_6))
+                            scheduleSetMarkerIcon(marker, c)
+                            //homeListener.onCoinCollected(c)
+                        }
+                    }
+                }
+                Thread.sleep(100)
+            }
+            monitorJoystick = false
+        }.start()
+    }
+
+    private fun getMarkersWithinRadius(center: LatLng, radius: Int, coinCollection: Collection<Benchmark>): List<Benchmark> {
+        return coinCollection.filter { c ->  inProximity(radius, center, LatLng(c.lat, c.lon))}
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -616,7 +686,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     private fun getSnippet(benchmark: Benchmark) : String{
         var now = Timestamp.now().seconds
-        if(user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect
+        if(user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect.toInt()
         return if (benchmark.lastVisited + SECONDS_TO_RECOLLECT > now) {
             val secondsLeft = benchmark.lastVisited + SECONDS_TO_RECOLLECT - now
             "Collect in ${Converters.toCountdownFormat(secondsLeft)}"
@@ -839,13 +909,13 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     private fun collected(benchmark: Benchmark) : Boolean{
         var now = Timestamp.now().seconds
-        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect
+        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect.toInt()
         return now - benchmark.lastVisited < SECONDS_TO_RECOLLECT
     }
 
     private fun canCollect(benchmark: Benchmark) : Boolean{
         var now = Timestamp.now().seconds
-        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect
+        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect.toInt()
         return now - benchmark.lastVisited > SECONDS_TO_RECOLLECT
     }
 
@@ -1002,6 +1072,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     Skill.GIANT -> {
                         circle?.remove()
                         circle = googleMap?.addCircle(getMyLocationCircle())
+                    }
+                    Skill.DRONE -> {
+                        droneLayout.visibility = View.GONE
+                        monitorJoystick = false
                     }
                     else -> {}
                 }

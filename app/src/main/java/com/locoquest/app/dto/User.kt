@@ -104,7 +104,7 @@ data class User(
             Skill.COMPANION -> Upgrade.COMPANION_CHARGE
             Skill.DRONE -> Upgrade.DRONE_CHARGE
         }
-        if(upgrades.contains(upgrade)) reuseIn += upgrade.effect
+        if(upgrades.contains(upgrade)) reuseIn += upgrade.effect.toInt()
         val availableIn = lastUsedSkill(skill) + skill.duration + reuseIn - Timestamp.now().seconds
         val isAvailable = availableIn < 0
         Log.d(TAG, "${skill.name} available:$isAvailable, available in ${Converters.toCountdownFormat(availableIn)}")
@@ -123,7 +123,7 @@ data class User(
             Skill.COMPANION -> Upgrade.COMPANION_BATT
             Skill.TIME -> null
         }
-        upgrade?.let { if(upgrades.contains(it)) duration += it.effect }
+        upgrade?.let { if(upgrades.contains(it)) duration += it.effect.toInt() }
         val lastUsed = lastUsedSkill(skill)
         val now = Timestamp.now().seconds
         val inUse = now - lastUsed < duration
@@ -134,8 +134,8 @@ data class User(
 
     fun getReach(): Int {
         return if (isSkillInUse(Skill.GIANT).first) {
-            var reach = Skill.GIANT.effect
-            if(upgrades.contains(Upgrade.GIANT_REACH)) reach += Upgrade.GIANT_REACH.effect
+            var reach = Skill.GIANT.effect.toInt()
+            if(upgrades.contains(Upgrade.GIANT_REACH)) reach += Upgrade.GIANT_REACH.effect.toInt()
             reach
         }else DEFAULT_REACH
     }

@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/drone_layout"
+            android:id="@+id/drone_skill_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 

@@ -111,8 +111,8 @@
         android:layout_margin="8dp"
         app:layout_constraintBottom_toTopOf="@id/user_exp"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_width="72dp"
-        android:layout_height="72dp"/>
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
 
     <TextView
         android:id="@+id/giant_timer"
@@ -129,13 +129,13 @@
         android:layout_height="wrap_content"/>
 
     <ImageView
-        android:id="@+id/drone"
+        android:id="@+id/drone_skill"
         android:src="@drawable/drone2"
         android:layout_margin="8dp"
         app:layout_constraintBottom_toTopOf="@id/giant"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_width="72dp"
-        android:layout_height="72dp"/>
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
 
     <TextView
         android:id="@+id/drone_timer"
@@ -145,9 +145,9 @@
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:textAlignment="center"
-        app:layout_constraintBottom_toBottomOf="@id/drone"
-        app:layout_constraintStart_toStartOf="@id/drone"
-        app:layout_constraintEnd_toEndOf="@id/drone"
+        app:layout_constraintBottom_toBottomOf="@id/drone_skill"
+        app:layout_constraintStart_toStartOf="@id/drone_skill"
+        app:layout_constraintEnd_toEndOf="@id/drone_skill"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
@@ -155,10 +155,10 @@
         android:id="@+id/companion"
         android:src="@drawable/spot"
         android:layout_margin="8dp"
-        app:layout_constraintBottom_toTopOf="@id/drone"
+        app:layout_constraintBottom_toTopOf="@id/drone_skill"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_width="72dp"
-        android:layout_height="72dp"/>
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
 
     <TextView
         android:id="@+id/companion_timer"
@@ -180,8 +180,8 @@
         android:layout_margin="8dp"
         app:layout_constraintBottom_toTopOf="@id/companion"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_width="72dp"
-        android:layout_height="72dp"/>
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
 
     <TextView
         android:id="@+id/time_timer"
@@ -283,5 +283,32 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/drone_layout"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.locoquest.app.JoystickView
+            android:id="@+id/joystick"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_margin="24dp"
+            android:layout_width="96dp"
+            android:layout_height="96dp"/>
+
+        <ImageView
+            android:id="@+id/drone"
+            android:src="@drawable/drone2"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_width="48dp"
+            android:layout_height="48dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -63,7 +63,7 @@ class AppModule : Application() {
                     var coinsCollected = Skill.COMPANION.effect
                     if(user.upgrades.contains(Upgrade.COMPANION_MOTOR))
                         coinsCollected += Upgrade.COMPANION_MOTOR.effect
-                    extras.putInt("coinsCollected", coinsCollected)
+                    extras.putInt("coinsCollected", coinsCollected.toInt())
                 }
                 extras.putBoolean("available", false)
                 secondsLeft * 1000
