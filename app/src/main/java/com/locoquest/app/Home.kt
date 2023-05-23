@@ -299,7 +299,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     if(!user.isSkillAvailable(Skill.TIME).first)return@OnClickListener
                     user.lastUsedTimeTravel = Timestamp.now()
                     monitorInUseSkillTimer(Skill.TIME)
-                    loadMarkers()
+                    loadMarkers(true)
                 }
                 R.id.drone_skill -> {
                     if(!user.isSkillAvailable(Skill.DRONE).first)return@OnClickListener
@@ -361,18 +361,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     val coins = getMarkersWithinRadius(map.cameraPosition.target, 100, markerToBenchmark.values)
                     coins.forEach { c ->
                         if (!user.visited.contains(c.pid) || (user.visited.contains(c.pid) && canCollect(c))) {
-                            val marker = benchmarkToMarker[c]!!
-                            c.lastVisited = Timestamp.now().seconds
-                            markerToBenchmark[marker] = c
-                            user.visited[c.pid] = c
-                            user.balance++
-                            user.experience++
-                            balance.text = user.balance.toString()
-                            updateProgress()
-                            user.update()
-                            marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.hour_glass_6))
-                            scheduleSetMarkerIcon(marker, c)
-                            //homeListener.onCoinCollected(c)
+                           collectCoin(c)
                         }
                     }
                 }
@@ -380,6 +369,22 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             }
             monitorJoystick = false
         }.start()
+    }
+
+    private fun collectCoin(c: Benchmark){
+        if(!benchmarkToMarker.contains(c)) return
+        val marker = benchmarkToMarker[c]!!
+        c.lastVisited = Timestamp.now().seconds
+        markerToBenchmark[marker] = c
+        user.visited[c.pid] = c
+        user.balance++
+        user.experience++
+        balance.text = user.balance.toString()
+        updateProgress()
+        user.update()
+        marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.hour_glass_6))
+        marker.snippet = "Collected ${Converters.formatSeconds(c.lastVisited)}"
+        scheduleSetMarkerIcon(marker, c)
     }
 
     private fun getMarkersWithinRadius(center: LatLng, radius: Int, coinCollection: Collection<Benchmark>): List<Benchmark> {
@@ -491,17 +496,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         //if coin is collectable
         if(!user.visited.contains(benchmark.pid) || (user.visited.contains(benchmark.pid) && canCollect(benchmark))) {
             if(inProximity) {
-                benchmark.lastVisited = Timestamp.now().seconds
-                markerToBenchmark[marker] = benchmark
-                user.visited[benchmark.pid] = benchmark
-                user.balance++
-                user.experience++
-                balance.text = user.balance.toString()
-                updateProgress()
-                user.update()
-                marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.hour_glass_6))
-                marker.snippet = "Collected ${Converters.formatSeconds(benchmark.lastVisited)}"
-                scheduleSetMarkerIcon(marker, benchmark)
+                collectCoin(benchmark)
                 homeListener.onCoinCollected(benchmark)
             }else {
                 marker.snippet = getSnippet(benchmark)
