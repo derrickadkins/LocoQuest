@@ -6,7 +6,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.Timestamp
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -26,13 +26,13 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromBenchmarks(value: HashMap<String, Benchmark>): String {
+    fun fromCoins(value: HashMap<String, Coin>): String {
         return gson.toJson(value)
     }
 
     @TypeConverter
-    fun toBenchmarks(value: String): HashMap<String, Benchmark> {
-        val listType = object : TypeToken<HashMap<String, Benchmark>>() {}.type
+    fun toCoins(value: String): HashMap<String, Coin> {
+        val listType = object : TypeToken<HashMap<String, Coin>>() {}.type
         return gson.fromJson(value, listType)
     }
 
@@ -70,15 +70,15 @@ class Converters {
     }
 
     companion object {
-        fun toMarkerOptions(benchmark: Benchmark): MarkerOptions {
+        fun toMarkerOptions(coin: Coin): MarkerOptions {
             return MarkerOptions()
                 .position(
                     LatLng(
-                        benchmark.lat,
-                        benchmark.lon
+                        coin.lat,
+                        coin.lon
                     )
                 )
-                .title(benchmark.name)
+                .title(coin.name)
         }
 
         fun formatSeconds(seconds: Long): String {

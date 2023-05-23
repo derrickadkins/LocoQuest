@@ -41,7 +41,7 @@ data class User(
     var lastUsedTimeTravel: Timestamp = Timestamp(0,0),
     val skills: ArrayList<Skill> = ArrayList(),
     val upgrades: ArrayList<Upgrade> = ArrayList(),
-    val visited: HashMap<String, Benchmark> = HashMap(),
+    val visited: HashMap<String, Coin> = HashMap(),
     val friends: ArrayList<String> = ArrayList(),
 ){
 
@@ -271,14 +271,14 @@ data class User(
                 if(upgrade != null) upgrades.add(upgrade)
             }
 
-            var visited = HashMap<String, Benchmark>()
+            var visited = HashMap<String, Coin>()
             val visitedList = if (it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
             visitedList.forEach { x ->
                 val pid = x["pid"] as String
                 val lastVisited = if(x["lastVisited"] == null) Timestamp(0,0) else x["lastVisited"] as Timestamp
                 val notify = if(x["notify"] == null) false else x["notify"] as Boolean
 
-                visited[pid] = Benchmark.new(
+                visited[pid] = Coin.new(
                     pid,
                     x["name"] as String,
                     x["location"] as GeoPoint,
@@ -333,11 +333,11 @@ data class User(
                 if(upgrade != null) upgrades.add(upgrade)
             }
 
-            val visited = HashMap<String, Benchmark>()
+            val visited = HashMap<String, Coin>()
             val visitedList = if(it["visited"] == null) ArrayList() else it["visited"] as ArrayList<HashMap<String, Any>>
             visitedList.forEach { x ->
                 val pid = x["pid"] as String
-                visited[pid] = Benchmark.new(pid,
+                visited[pid] = Coin.new(pid,
                     x["name"] as String,
                     x["location"] as GeoPoint,
                     x["lastVisited"] as Timestamp,

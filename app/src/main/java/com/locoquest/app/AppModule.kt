@@ -8,7 +8,7 @@ import android.content.Context
 import android.os.PersistableBundle
 import android.util.Log
 import com.locoquest.app.dao.DB
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 import com.locoquest.app.dto.User
 
 class AppModule : Application() {
@@ -31,13 +31,13 @@ class AppModule : Application() {
         const val BOOSTED_DURATION = 300
         val SECONDS_TO_RECOLLECT = if(DEBUG) 30 else 14400 // 4 hrs
 
-        fun scheduleNotification(context: Context, benchmark: Benchmark) {
+        fun scheduleNotification(context: Context, coin: Coin) {
             val extras = PersistableBundle()
-            extras.putString("pid", benchmark.pid)
-            extras.putString("name", benchmark.name)
-            val delayMillis = System.currentTimeMillis() - benchmark.lastVisited * 1000 + SECONDS_TO_RECOLLECT * 1000
+            extras.putString("pid", coin.pid)
+            extras.putString("name", coin.name)
+            val delayMillis = System.currentTimeMillis() - coin.lastVisited * 1000 + SECONDS_TO_RECOLLECT * 1000
             val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-            val jobInfoBuilder = JobInfo.Builder(benchmark.pid.hashCode(), ComponentName(context, NotifyService::class.java))
+            val jobInfoBuilder = JobInfo.Builder(coin.pid.hashCode(), ComponentName(context, NotifyService::class.java))
                 .setMinimumLatency(delayMillis)
                 .setOverrideDeadline(delayMillis + 1000)
                 .setPersisted(true)
@@ -48,9 +48,9 @@ class AppModule : Application() {
             else Log.d(TAG, "job failed to schedule")
         }
 
-        fun cancelNotification(context: Context, benchmark: Benchmark) {
+        fun cancelNotification(context: Context, coin: Coin) {
             val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-            jobScheduler.cancel(benchmark.pid.hashCode())
+            jobScheduler.cancel(coin.pid.hashCode())
         }
 
         fun scheduleNotification(context: Context, skill: Skill){

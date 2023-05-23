@@ -252,27 +252,29 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/visitedBenchmarksText"
+                        android:id="@+id/collectedCoinsText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/visited_benchmarks"
+                        android:text="@string/collected_coins"
                         android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/benchmarkCount"
+                        android:id="@+id/coinCount"
                         android:textSize="24sp"
-                        android:layout_toEndOf="@id/visitedBenchmarksText"
-                        android:layout_alignBaseline="@id/visitedBenchmarksText"
+                        android:text="(999)"
+                        android:layout_marginStart="8dp"
+                        android:layout_toEndOf="@id/collectedCoinsText"
+                        android:layout_alignBaseline="@id/collectedCoinsText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
                     <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/benchmarks"
-                        tools:listitem="@layout/benchmark"
+                        android:id="@+id/coins"
+                        tools:listitem="@layout/coin"
                         android:layout_width="match_parent"
                         android:layout_height="500dp"
-                        android:layout_below="@+id/visitedBenchmarksText"
+                        android:layout_below="@+id/collectedCoinsText"
                         android:layout_alignParentBottom="true" />
 
                 </RelativeLayout>

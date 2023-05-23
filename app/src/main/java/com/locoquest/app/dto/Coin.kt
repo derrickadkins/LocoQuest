@@ -2,7 +2,7 @@ package com.locoquest.app.dto
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.GeoPoint
-data class Benchmark(
+data class Coin(
     val pid: String,
     val name: String,
     val lat: Double,
@@ -23,8 +23,8 @@ data class Benchmark(
                 location: GeoPoint,
                 lastVisited: Timestamp = Timestamp(0,0),
                 notify: Boolean
-        ) : Benchmark {
-            return Benchmark(pid, name, location.latitude, location.longitude, lastVisited.seconds, notify)
+        ) : Coin {
+            return Coin(pid, name, location.latitude, location.longitude, lastVisited.seconds, notify)
         }
     }
 }

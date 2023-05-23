@@ -7,35 +7,35 @@ import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 
-class BenchmarkAdapter(private val benchmarks: ArrayList<Benchmark>,
-                       private val longClickListener: OnLongClickListener,
-                       private val clickListener: OnClickListener) : RecyclerView.Adapter<BenchmarkAdapter.ViewHolder>() {
+class CoinAdapter(private val coins: ArrayList<Coin>,
+                  private val longClickListener: OnLongClickListener,
+                  private val clickListener: OnClickListener) : RecyclerView.Adapter<CoinAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.benchmark, parent, false)
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.coin, parent, false)
         return ViewHolder(itemView)
     }
 
     override fun getItemCount(): Int {
-        return benchmarks.size
+        return coins.size
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val benchmark = benchmarks[position]
-        holder.pid.text = "${benchmark.pid}:"
-        holder.name.text = benchmark.name
-        holder.latlng.text = "${benchmark.lat} ${benchmark.lon}"
-        holder.lastVisited.text = Converters.formatSeconds(benchmark.lastVisited)
+        val coin = coins[position]
+        holder.pid.text = "${coin.pid}:"
+        holder.name.text = coin.name
+        holder.latlng.text = "${coin.lat} ${coin.lon}"
+        holder.lastVisited.text = Converters.formatSeconds(coin.lastVisited)
 
         holder.itemView.setOnLongClickListener(longClickListener)
         holder.itemView.setOnClickListener(clickListener)
     }
 
-    fun removeBenchmark(pid: String): Benchmark? {
-        val index = benchmarks.indexOfFirst { it.pid == pid }
-        return if (index != -1) benchmarks.removeAt(index) else null
+    fun removeCoin(pid: String): Coin? {
+        val index = coins.indexOfFirst { it.pid == pid }
+        return if (index != -1) coins.removeAt(index) else null
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

@@ -13,11 +13,9 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 import com.locoquest.app.dto.User
 
 class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongClickListener,
@@ -157,7 +155,7 @@ class FriendsActivity : AppCompatActivity(), View.OnClickListener, View.OnLongCl
             .show()
     }
 
-    override fun onBenchmarkClicked(benchmark: Benchmark) {
+    override fun onCoinClicked(coin: Coin) {
         TODO("Not yet implemented")
     }
 

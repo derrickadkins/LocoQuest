@@ -1,6 +1,6 @@
 package com.locoquest.app
 
-import BenchmarkService
+import CoinService
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationManager
@@ -53,7 +53,6 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.Circle
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -68,14 +67,14 @@ import com.locoquest.app.AppModule.Companion.scheduleNotification
 import com.locoquest.app.AppModule.Companion.user
 import com.locoquest.app.Converters.Companion.toMarkerOptions
 import com.locoquest.app.MainActivity.Companion.secondaryFragment
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 import com.locoquest.app.dto.User
 import java.net.UnknownHostException
 
 class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
     ISecondaryFragment, Profile.ProfileListener, NotifyService.Companion.Listener {
 
-    var selectedBenchmark: Benchmark? = null
+    var selectedCoin: Coin? = null
     private var switchingUser = false
     private var profile: Profile? = null
     lateinit var balance: TextView
@@ -88,8 +87,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private var loadingMarkers = false
     private var cameraIsBeingMoved = false
     private var notifyUserOfNetwork = true
-    private var markerToBenchmark: HashMap<Marker, Benchmark> = HashMap()
-    private var benchmarkToMarker: HashMap<Benchmark, Marker> = HashMap()
+    private var markerToCoin: HashMap<Marker, Coin> = HashMap()
+    private var coinToMarker: HashMap<Coin, Marker> = HashMap()
     private lateinit var prefs: Prefs
     private lateinit var notifyFab: FloatingActionButton
     private lateinit var userImg: ImageView
@@ -116,7 +115,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
     interface HomeListener {
         fun onMushroomClicked()
-        fun onCoinCollected(benchmark: Benchmark)
+        fun onCoinCollected(coin: Coin)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -216,13 +215,13 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
         notifyFab = view.findViewById(R.id.notify_fab)
         notifyFab.setOnClickListener {
-            val benchmark = markerToBenchmark[selectedMarker]!!
-            val notify = benchmark.notify
-            benchmark.notify = !notify
-            user.visited[benchmark.pid] = benchmark
+            val coin = markerToCoin[selectedMarker]!!
+            val notify = coin.notify
+            coin.notify = !notify
+            user.visited[coin.pid] = coin
             user.update()
 
-            if(benchmark.notify){
+            if(coin.notify){
                 val notificationManger = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                     !notificationManger.areNotificationsEnabled()) {
@@ -234,10 +233,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     return@setOnClickListener
                 }
 
-                if(collected(benchmark)) scheduleNotification(requireContext(), benchmark)
+                if(collected(coin)) scheduleNotification(requireContext(), coin)
                 notifyFab.setImageResource(R.drawable.notifications_active)
             }else{
-                cancelNotification(requireContext(), benchmark)
+                cancelNotification(requireContext(), coin)
                 notifyFab.setImageResource(R.drawable.notifications_off)
             }
         }
@@ -358,12 +357,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                         )
                     )
 
-                    val coins = getMarkersWithinRadius(map.cameraPosition.target, 100, markerToBenchmark.values)
-                    coins.forEach { c ->
-                        if (!user.visited.contains(c.pid) || (user.visited.contains(c.pid) && canCollect(c))) {
-                           collectCoin(c)
-                        }
-                    }
+                    val coins = getMarkersWithinRadius(map.cameraPosition.target, 100, markerToCoin.values)
+                    coins.forEach { c -> if (canCollect(c)) collectCoin(c) }
                 }
                 Thread.sleep(100)
             }
@@ -371,11 +366,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }.start()
     }
 
-    private fun collectCoin(c: Benchmark){
-        if(!benchmarkToMarker.contains(c)) return
-        val marker = benchmarkToMarker[c]!!
+    private fun collectCoin(c: Coin){
+        if(!coinToMarker.contains(c)) return
+        val marker = coinToMarker[c]!!
         c.lastVisited = Timestamp.now().seconds
-        markerToBenchmark[marker] = c
+        markerToCoin[marker] = c
         user.visited[c.pid] = c
         user.balance++
         user.experience++
@@ -387,7 +382,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         scheduleSetMarkerIcon(marker, c)
     }
 
-    private fun getMarkersWithinRadius(center: LatLng, radius: Int, coinCollection: Collection<Benchmark>): List<Benchmark> {
+    private fun getMarkersWithinRadius(center: LatLng, radius: Int, coinCollection: Collection<Coin>): List<Coin> {
         return coinCollection.filter { c ->  inProximity(radius, center, LatLng(c.lat, c.lon))}
     }
 
@@ -479,11 +474,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         //layersLayout.visibility = View.GONE
         //updateTrackingStatus(false)
 
-        if(!markerToBenchmark.contains(marker)) return true
-        val benchmark = markerToBenchmark[marker]!!
+        if(!markerToCoin.contains(marker)) return true
+        val coin = markerToCoin[marker]!!
 
         notifyFab.visibility = View.VISIBLE
-        notifyFab.setImageResource(if(benchmark.notify) R.drawable.notifications_active else R.drawable.notifications_off)
+        notifyFab.setImageResource(if(coin.notify) R.drawable.notifications_active else R.drawable.notifications_off)
 
         monitorSelectedMarker()
 
@@ -494,16 +489,16 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             else inProximity(user.getReach(), marker.position, LatLng(lastLocation.latitude, lastLocation.longitude))
 
         //if coin is collectable
-        if(!user.visited.contains(benchmark.pid) || (user.visited.contains(benchmark.pid) && canCollect(benchmark))) {
+        if(canCollect(coin)) {
             if(inProximity) {
-                collectCoin(benchmark)
-                homeListener.onCoinCollected(benchmark)
+                collectCoin(coin)
+                homeListener.onCoinCollected(coin)
             }else {
-                marker.snippet = getSnippet(benchmark)
+                marker.snippet = getSnippet(coin)
                 Toast.makeText(context, "Not close enough to complete", Toast.LENGTH_SHORT).show()
             }
         }else{
-            marker.snippet = getSnippet(benchmark)
+            marker.snippet = getSnippet(coin)
         }
 
         // Return false to indicate that we have not consumed the event and that we wish
@@ -524,10 +519,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         displayUserInfo()
     }
 
-    override fun onBenchmarkClicked(benchmark: Benchmark) {
-        Log.d("event", "onBenchmarkClicked")
+    override fun onCoinClicked(coin: Coin) {
+        Log.d("event", "onCoinClicked")
         hideProfile()
-        selectedBenchmark = benchmark
+        selectedCoin = coin
         loadMarkers(false)
     }
 
@@ -602,11 +597,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             })
     }
 
-    private fun scheduleSetMarkerIcon(marker: Marker, benchmark: Benchmark){
+    private fun scheduleSetMarkerIcon(marker: Marker, coin: Coin){
         Handler(Looper.getMainLooper()).postDelayed({
             try{
-                marker.setIcon(getMarkerRes(benchmark))
-                if(collected(benchmark)) scheduleSetMarkerIcon(marker, benchmark)
+                marker.setIcon(getMarkerRes(coin))
+                if(collected(coin)) scheduleSetMarkerIcon(marker, coin)
             }catch (e: Exception){
                 Log.e("marker set icon", e.toString())
             }
@@ -681,13 +676,13 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
     }
 
-    private fun getSnippet(benchmark: Benchmark) : String{
+    private fun getSnippet(coin: Coin) : String{
         var now = Timestamp.now().seconds
-        if(user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect.toInt()
-        return if (benchmark.lastVisited + SECONDS_TO_RECOLLECT > now) {
-            val secondsLeft = benchmark.lastVisited + SECONDS_TO_RECOLLECT - now
+        if(user.lastUsedSkill(Skill.TIME) > coin.lastVisited) now += Skill.TIME.effect.toInt()
+        return if (coin.lastVisited + SECONDS_TO_RECOLLECT > now) {
+            val secondsLeft = coin.lastVisited + SECONDS_TO_RECOLLECT - now
             "Collect in ${Converters.toCountdownFormat(secondsLeft)}"
-        }else if(benchmark.lastVisited > 0) "Collected ${Converters.formatSeconds(benchmark.lastVisited)}"
+        }else if(coin.lastVisited > 0) "Collected ${Converters.formatSeconds(coin.lastVisited)}"
         else "Never collected"
     }
 
@@ -703,9 +698,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                         return@post
                     }
                     try {
-                        selectedMarker!!.snippet = getSnippet(markerToBenchmark[selectedMarker]!!)
+                        selectedMarker!!.snippet = getSnippet(markerToCoin[selectedMarker]!!)
                         selectedMarker!!.showInfoWindow()
-                        //selectedMarker!!.setIcon(getMarkerRes(markerToBenchmark[selectedMarker]!!))
                     }catch (e: Exception){
                         monitoringSelectedMarker = false
                         Log.e("selected marker", e.toString())
@@ -748,7 +742,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     private fun loadMarkers(isUserSwitched: Boolean) {
         try {
             Log.d("tracker", "loading markers")
-            goToSelectedBenchmark()
+            goToSelectedCoin()
             if (!isOnline()) {
                 if (notifyUserOfNetwork) {
                     Toast.makeText(context, "No network: Can't load markers", Toast.LENGTH_SHORT)
@@ -765,46 +759,46 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
             Thread {
                 try {
-                    val benchmarkList = BenchmarkService().getBenchmarks(bounds)
-                    if (benchmarkList == null) {
-                        println("Error: unable to retrieve benchmark data")
+                    val coinList = CoinService().getCoins(bounds)
+                    if (coinList == null) {
+                        println("Error: unable to retrieve coin data")
                         return@Thread
                     }
-                    if (benchmarkList.isEmpty() || (isSameBenchmarks(benchmarkList) && !isUserSwitched)) {
+                    if (coinList.isEmpty() || (isSameCoins(coinList) && !isUserSwitched)) {
                         loadingMarkers = false
                         return@Thread
                     }
 
-                    val newBenchmarks = mutableListOf<Benchmark>()
-                    val existingBenchmarks = mutableListOf<Benchmark>()
+                    val newCoins = mutableListOf<Coin>()
+                    val existingCoins = mutableListOf<Coin>()
 
-                    // Find new and existing benchmarks
-                    for (benchmark in benchmarkList) {
-                        val mark = if (user.visited.containsKey(benchmark.pid))
-                            user.visited[benchmark.pid]!! else benchmark
-                        if (benchmarkToMarker.keys.contains(mark))
-                            existingBenchmarks.add(mark)
-                        else newBenchmarks.add(mark)
+                    // Find new and existing coins
+                    for (coin in coinList) {
+                        val mark = if (user.visited.containsKey(coin.pid))
+                            user.visited[coin.pid]!! else coin
+                        if (coinToMarker.keys.contains(mark))
+                            existingCoins.add(mark)
+                        else newCoins.add(mark)
                     }
 
                     // Update marker colors after user switch
                     if (isUserSwitched) {
                         Handler(Looper.getMainLooper()).post {
-                            existingBenchmarks.forEach {
-                                benchmarkToMarker[it]?.setIcon(getMarkerRes(it))
+                            existingCoins.forEach {
+                                coinToMarker[it]?.setIcon(getMarkerRes(it))
                             }
                         }
                     }
 
-                    // Remove markers for deleted benchmarks
-                    val iterator = benchmarkToMarker.iterator()
-                    val pids = benchmarkList.map { it.pid }
+                    // Remove markers for deleted coins
+                    val iterator = coinToMarker.iterator()
+                    val pids = coinList.map { it.pid }
                     while (iterator.hasNext()) {
                         val entry = iterator.next()
                         if (!pids.contains(entry.key.pid)) {
                             val marker = entry.value
                             iterator.remove()
-                            markerToBenchmark.remove(marker)
+                            markerToCoin.remove(marker)
                             Handler(Looper.getMainLooper()).post {
                                 try {
                                     if(selectedMarker == marker){
@@ -819,12 +813,12 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                         }
                     }
 
-                    // Add markers for new benchmarks
+                    // Add markers for new coins
                     Handler(Looper.getMainLooper()).post {
-                        for (benchmark in newBenchmarks) {
-                            val marker = addBenchmarkToMap(benchmark)
-                            if(marker != null && collected(benchmark))
-                                scheduleSetMarkerIcon(marker, benchmark)
+                        for (coin in newCoins) {
+                            val marker = addCoinToMap(coin)
+                            if(marker != null && collected(coin))
+                                scheduleSetMarkerIcon(marker, coin)
                         }
                         loadingMarkers = false
                         Log.d("tracker", "markers loaded")
@@ -843,10 +837,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
     }
 
-    private fun getMarkerRes(benchmark: Benchmark) : BitmapDescriptor {
+    private fun getMarkerRes(coin: Coin) : BitmapDescriptor {
         return BitmapDescriptorFactory.fromResource(
-            if (user.visited.contains(benchmark.pid) && collected(benchmark)) {
-                val secondsLeft = benchmark.lastVisited + SECONDS_TO_RECOLLECT - System.currentTimeMillis() / 1000
+            if (user.visited.contains(coin.pid) && collected(coin)) {
+                val secondsLeft = coin.lastVisited + SECONDS_TO_RECOLLECT - System.currentTimeMillis() / 1000
                 when(mapToRange(secondsLeft, IntRange(0, SECONDS_TO_RECOLLECT), IntRange(0,6))){
                     0 -> R.drawable.hour_glass_0
                     1 -> R.drawable.hour_glass_1
@@ -866,54 +860,55 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         return (ratio * (target.last - target.first)).toInt()
     }
 
-    private fun isSameBenchmarks(benchmarkList: List<Benchmark>) : Boolean{
-        return benchmarkList.map { it.pid }.sorted() == markerToBenchmark.values.map { it.pid }.sorted()
+    private fun isSameCoins(coinList: List<Coin>) : Boolean{
+        return coinList.map { it.pid }.sorted() == markerToCoin.values.map { it.pid }.sorted()
     }
 
-    private fun goToSelectedBenchmark() {
-            if (selectedBenchmark == null) return
-            Log.d("tracker", "going to selected benchmark")
+    private fun goToSelectedCoin() {
+            if (selectedCoin == null) return
+            Log.d("tracker", "going to selected coin")
 
-            val benchmark = selectedBenchmark!!
+            val coin = selectedCoin!!
             tracking = false
             googleMap?.moveCamera(
                 CameraUpdateFactory.newLatLngZoom(
                     LatLng(
-                        benchmark.lat,
-                        benchmark.lon
+                        coin.lat,
+                        coin.lon
                     ), 15f
                 )
             )
 
             val selectedMarker =
-                if (benchmarkToMarker.contains(benchmark))
-                    benchmarkToMarker[benchmark]
-                else addBenchmarkToMap(benchmark)
+                if (coinToMarker.contains(coin))
+                    coinToMarker[coin]
+                else addCoinToMap(coin)
 
             selectedMarker?.showInfoWindow()
 
-            selectedBenchmark = null
+            selectedCoin = null
     }
 
-    private fun addBenchmarkToMap(benchmark: Benchmark) : Marker? {
-        val marker = googleMap!!.addMarker(toMarkerOptions(benchmark).icon(getMarkerRes(benchmark)))
+    private fun addCoinToMap(coin: Coin) : Marker? {
+        val marker = googleMap!!.addMarker(toMarkerOptions(coin).icon(getMarkerRes(coin)))
         if(marker != null) {
-            markerToBenchmark[marker] = benchmark
-            benchmarkToMarker[benchmark] = marker
+            markerToCoin[marker] = coin
+            coinToMarker[coin] = marker
         }
         return marker
     }
 
-    private fun collected(benchmark: Benchmark) : Boolean{
+    private fun collected(coin: Coin) : Boolean{
         var now = Timestamp.now().seconds
-        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect.toInt()
-        return now - benchmark.lastVisited < SECONDS_TO_RECOLLECT
+        if (user.lastUsedSkill(Skill.TIME) > coin.lastVisited) now += Skill.TIME.effect.toInt()
+        return now - coin.lastVisited < SECONDS_TO_RECOLLECT
     }
 
-    private fun canCollect(benchmark: Benchmark) : Boolean{
+    private fun canCollect(c: Coin) : Boolean{
+        if(!user.visited.contains(c.pid)) return true
         var now = Timestamp.now().seconds
-        if (user.lastUsedSkill(Skill.TIME) > benchmark.lastVisited) now += Skill.TIME.effect.toInt()
-        return now - benchmark.lastVisited > SECONDS_TO_RECOLLECT
+        if (user.lastUsedSkill(Skill.TIME) > c.lastVisited) now += Skill.TIME.effect.toInt()
+        return user.visited.contains(c.pid) && now - c.lastVisited > SECONDS_TO_RECOLLECT
     }
 
     @SuppressLint("MissingPermission")
@@ -1112,8 +1107,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     }
 
     fun onNotificationsEnabled(){
-        val benchmark = markerToBenchmark[selectedMarker]!!
-        if(collected(benchmark)) scheduleNotification(requireContext(), benchmark)
+        val coin = markerToCoin[selectedMarker]!!
+        if(collected(coin)) scheduleNotification(requireContext(), coin)
         notifyFab.setImageResource(R.drawable.notifications_active)
     }
 

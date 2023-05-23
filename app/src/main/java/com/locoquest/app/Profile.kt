@@ -28,10 +28,8 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.request.target.CustomTarget
 import com.locoquest.app.AppModule.Companion.guest
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 import com.locoquest.app.dto.User
-import kotlin.math.exp
-import kotlin.math.roundToInt
 
 
 class Profile(private val user: User,
@@ -40,13 +38,13 @@ class Profile(private val user: User,
               private val profileListener: ProfileListener) : Fragment(), OnLongClickListener, OnClickListener {
 
     interface ProfileListener {
-        fun onBenchmarkClicked(benchmark: Benchmark)
+        fun onCoinClicked(coin: Coin)
         fun onLogin()
         fun onSignOut()
     }
-    private lateinit var adapter: BenchmarkAdapter
+    private lateinit var adapter: CoinAdapter
     private lateinit var recyclerView: RecyclerView
-    private lateinit var benchmarkCount: TextView
+    private lateinit var coinCount: TextView
     private lateinit var name: TextView
 
     override fun onCreateView(
@@ -61,7 +59,7 @@ class Profile(private val user: User,
 
         view.findViewById<TextView>(R.id.profile_balance).text = user.balance.toString()
 
-        benchmarkCount = view.findViewById(R.id.benchmarkCount)
+        coinCount = view.findViewById(R.id.coinCount)
 
         val signBtn = view.findViewById<Button>(R.id.sign_in_out_btn)
         val editNameBtn = view.findViewById<ImageView>(R.id.editNameBtn)
@@ -86,13 +84,13 @@ class Profile(private val user: User,
             editNameBtn.visibility = View.GONE
         }
 
-        recyclerView = view.findViewById(R.id.benchmarks)
+        recyclerView = view.findViewById(R.id.coins)
         recyclerView.layoutManager = LinearLayoutManager(context)
-        adapter = BenchmarkAdapter(
+        adapter = CoinAdapter(
             ArrayList(user.visited.values.toList().sortedByDescending { x-> x.lastVisited }),
             this, this)
         recyclerView.adapter = adapter
-        benchmarkCount.text = "(${adapter.itemCount})"
+        coinCount.text = "(${adapter.itemCount})"
 
         Glide.with(this)
             .load(user.photoUrl)
@@ -160,21 +158,21 @@ class Profile(private val user: User,
     }
 
     override fun onLongClick(view: View?): Boolean {
-        if(enableEdit) return false
+        /*if(enableEdit) return false
         AlertDialog.Builder(context)
-            .setTitle("Remove Benchmark?")
+            .setTitle("Remove Coin?")
             .setMessage("Warning! This cannot be undone.")
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Remove"){ _, _ ->
                 val pidT = view?.findViewById<TextView>(R.id.pid)?.text.toString()
                 val pid = pidT.substring(0, pidT.length-1)
-                adapter.removeBenchmark(pid)
+                adapter.removeCoin(pid)
                 adapter.notifyDataSetChanged()
                 user.visited.remove(pid)
                 user.update()
-                benchmarkCount.text = "(${adapter.itemCount})"
+                coinCount.text = "(${adapter.itemCount})"
             }
-            .show()
+            .show()*/
         return true
     }
 
@@ -182,7 +180,7 @@ class Profile(private val user: User,
         if(!enableEdit) return
         val pidT = view?.findViewById<TextView>(R.id.pid)?.text.toString()
         val pid = pidT.substring(0, pidT.length-1)
-        if(user.visited.contains(pid)) profileListener.onBenchmarkClicked(user.visited[pid]!!)
+        if(user.visited.contains(pid)) profileListener.onCoinClicked(user.visited[pid]!!)
     }
 
     private fun showEditNameDialog(){

@@ -21,14 +21,13 @@
     <string name="profile_text">Profile</string>
     <string name="todo">TODO</string>
     <string name="edit_name">Edit Name</string>
-    <string name="completed_benchmarks">Completed Benchmarks</string>
     <string name="def">Default</string>
     <string name="hybrid">Hybrid</string>
     <string name="satellite">Satellite</string>
     <string name="terrain">Terrain</string>
     <string name="login">Login</string>
     <string name="sign_out">Sign Out</string>
-    <string name="visited_benchmarks">Visited Benchmarks</string>
+    <string name="collected_coins">Collected Coins</string>
     <string name="title_activity_ad_mob">AdMobActivity</string>
     <string name="action_settings">Settings</string>
 

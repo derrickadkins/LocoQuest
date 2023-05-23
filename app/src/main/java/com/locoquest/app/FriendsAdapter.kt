@@ -11,8 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
 import com.bumptech.glide.request.target.CustomTarget
-import com.google.firebase.auth.FirebaseAuth
-import com.locoquest.app.dto.Benchmark
 import com.locoquest.app.dto.User
 
 class FriendsAdapter(private val context: Context,

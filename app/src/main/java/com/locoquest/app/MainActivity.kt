@@ -25,7 +25,7 @@ import com.locoquest.app.AppModule.Companion.db
 import com.locoquest.app.AppModule.Companion.scheduleNotification
 import com.locoquest.app.AppModule.Companion.user
 import com.locoquest.app.dao.DB
-import com.locoquest.app.dto.Benchmark
+import com.locoquest.app.dto.Coin
 import com.locoquest.app.dto.User
 
 
@@ -155,12 +155,12 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
         }
     }
 
-    override fun onCoinCollected(benchmark: Benchmark) {
+    override fun onCoinCollected(coin: Coin) {
         Log.d("event", "MainActivity.onCoinCollected")
         //Toast.makeText(this, "Coin collected", Toast.LENGTH_SHORT).show()
         secondaryFragment = CoinCollectedDialog(this, this)
         supportFragmentManager.beginTransaction().replace(R.id.secondary_container, secondaryFragment!!).commit()
-        if(benchmark.notify) scheduleNotification(this, benchmark)
+        if(coin.notify) scheduleNotification(this, coin)
     }
 
     override fun onWatchAdButtonClicked() {
