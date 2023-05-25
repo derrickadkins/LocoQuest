@@ -28,7 +28,7 @@ class JoystickView @JvmOverloads constructor(
     }
 
     private val innerCirclePaint: Paint = Paint().apply {
-        color = Color.BLUE
+        color = resources.getColor(R.color.semi_transparent_blue, null)
         style = Paint.Style.FILL
     }
 
@@ -57,7 +57,7 @@ class JoystickView @JvmOverloads constructor(
         val centerX = width / 2f
         val centerY = height / 2f
         outerCircleRadius = width.coerceAtMost(height) / 2f
-        innerCircleRadius = outerCircleRadius / 2f
+        innerCircleRadius = outerCircleRadius / 3f
         outerCircleCenter.set(centerX, centerY)
         innerCircleCenter.set(centerX, centerY)
     }
