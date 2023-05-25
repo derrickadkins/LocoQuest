@@ -18,6 +18,7 @@ class AppModule : Application() {
         FOR DEBUGGING ONLY
          - Skips proximity check
          - Reduces SECONDS_TO_RECOLLECT to 30
+         - 0 cost to reset skills
          */
         const val DEBUG = false
         //////////////////////////////////////
@@ -27,8 +28,6 @@ class AppModule : Application() {
         val guest: User = User("0","Guest")
         var user: User = guest
         const val DEFAULT_REACH = 150
-        const val BOOSTED_REACH = 500
-        const val BOOSTED_DURATION = 300
         val SECONDS_TO_RECOLLECT = if(DEBUG) 30 else 14400 // 4 hrs
 
         fun scheduleNotification(context: Context, coin: Coin) {
