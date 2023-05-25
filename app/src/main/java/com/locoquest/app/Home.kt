@@ -430,10 +430,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     override fun onMapReady(map: GoogleMap) {
         Log.d("tracker", "map is ready")
         googleMap = map
-        map.uiSettings.isScrollGesturesEnabled = false
+        /*map.uiSettings.isScrollGesturesEnabled = false
         map.uiSettings.isZoomGesturesEnabled = false
         map.uiSettings.isRotateGesturesEnabled = false
-        map.uiSettings.isTiltGesturesEnabled = false
+        map.uiSettings.isTiltGesturesEnabled = false*/
+        map.setMinZoomPreference(MIN_ZOOM)
         map.mapType = prefs.mapType()
         map.setOnMarkerClickListener(this)
         map.setOnCameraIdleListener {
@@ -875,7 +876,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     LatLng(
                         coin.lat,
                         coin.lon
-                    ), 15f
+                    ), DEFAULT_ZOOM
                 )
             )
 
