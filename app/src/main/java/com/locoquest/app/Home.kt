@@ -343,7 +343,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         joystick = view.findViewById(R.id.joystick)
         joystick.setOnJoystickMoveListener(object : JoystickView.OnJoystickMoveListener {
             override fun onJoystickMove(xPercent: Float, yPercent: Float) {
-                Log.d(TAG, "joystick moved; x:$xPercent, y:$yPercent")
                 if (user.isSkillInUse(Skill.DRONE).first) monitorJoystick()
             }
             override fun onJoystickRelease() {monitorJoystick = false}
