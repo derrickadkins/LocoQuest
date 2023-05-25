@@ -270,13 +270,24 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
         pair = user.isSkillAvailable(Skill.DRONE)
         droneTimer.visibility = if(!pair.first && user.skills.contains(Skill.DRONE)) {
-            monitorInUseSkillTimer(Skill.DRONE)
+            monitorInUseSkillTimer(Skill.DRONE){
+                droneLayout.visibility = View.GONE
+                monitorJoystick = false
+                val map = googleMap ?: return@monitorInUseSkillTimer
+                map.uiSettings.isScrollGesturesEnabled = true
+                map.uiSettings.isZoomGesturesEnabled = true
+                map.uiSettings.isRotateGesturesEnabled = true
+                map.uiSettings.isTiltGesturesEnabled = true
+            }
             View.VISIBLE
         } else View.GONE
 
         pair = user.isSkillAvailable(Skill.GIANT)
         giantTimer.visibility = if(!pair.first && user.skills.contains(Skill.GIANT)) {
-            monitorInUseSkillTimer(Skill.GIANT)
+            monitorInUseSkillTimer(Skill.GIANT){
+                circle?.remove()
+                circle = googleMap?.addCircle(getMyLocationCircle())
+            }
             View.VISIBLE
         } else View.GONE
 
@@ -1050,7 +1061,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             .radius(user.getReach().toDouble())
     }
 
-    private fun monitorInUseSkillTimer(skill: Skill){
+    private fun monitorInUseSkillTimer(skill: Skill){monitorInUseSkillTimer(skill, null)}
+    private fun monitorInUseSkillTimer(skill: Skill, onUsed: (() -> Unit)?){
         if(inUseSkillTimers.contains(skill)) return
         Log.d(TAG, "starting ${skill.name} in use timer thread")
         inUseSkillTimers[skill.ordinal] = skill
@@ -1073,24 +1085,9 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             }
 
             Handler(Looper.getMainLooper()).post {
-                timerTxt.visibility = View.GONE
-                when(skill){
-                    Skill.GIANT -> {
-                        circle?.remove()
-                        circle = googleMap?.addCircle(getMyLocationCircle())
-                    }
-                    Skill.DRONE -> {
-                        droneLayout.visibility = View.GONE
-                        monitorJoystick = false
-                        val map = googleMap ?: return@post
-                        map.uiSettings.isScrollGesturesEnabled = true
-                        map.uiSettings.isZoomGesturesEnabled = true
-                        map.uiSettings.isRotateGesturesEnabled = true
-                        map.uiSettings.isTiltGesturesEnabled = true
-                    }
-                    else -> {}
-                }
+                if (onUsed != null) onUsed()
 
+                timerTxt.visibility = View.GONE
                 inUseSkillTimers[skill.ordinal] = null
                 Log.d(TAG, "exiting ${skill.name} in use timer thread")
                 monitorReuseInSkillTimer(skill)
