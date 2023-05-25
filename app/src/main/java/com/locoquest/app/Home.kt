@@ -75,9 +75,10 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
     ISecondaryFragment, Profile.ProfileListener, NotifyService.Companion.Listener {
 
     var selectedCoin: Coin? = null
-    private var switchingUser = false
-    private var profile: Profile? = null
     lateinit var balance: TextView
+    private var switchingUser = false
+    private var monitorJoystick = false
+    private var profile: Profile? = null
     private var googleMap: GoogleMap? = null
     private var circle: Circle? = null
     private var selectedMarker: Marker? = null
@@ -371,7 +372,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
     }
 
-    var monitorJoystick = false
     private fun monitorJoystick(){
         if(monitorJoystick) return
         monitorJoystick = true
@@ -1080,8 +1080,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             .radius(user.getReach().toDouble())
     }
 
-    private fun monitorInUseSkillTimer(skill: Skill){monitorInUseSkillTimer(skill, null)}
-    private fun monitorInUseSkillTimer(skill: Skill, onUsed: (() -> Unit)?){
+    private fun monitorInUseSkillTimer(skill: Skill, onUsed: () -> Unit){
         if(inUseSkillTimers.contains(skill)) return
         Log.d(TAG, "starting ${skill.name} in use timer thread")
         inUseSkillTimers[skill.ordinal] = skill
@@ -1104,7 +1103,7 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
             }
 
             Handler(Looper.getMainLooper()).post {
-                if (onUsed != null) onUsed()
+                onUsed()
 
                 timerTxt.visibility = View.GONE
                 inUseSkillTimers[skill.ordinal] = null
