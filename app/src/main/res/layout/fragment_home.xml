@@ -117,7 +117,7 @@
     <TextView
         android:id="@+id/giant_timer"
         android:text="5:00"
-        android:background="@drawable/timer_bg"
+        android:background="@drawable/using_timer_bg"
         android:textColor="@color/black"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
@@ -140,7 +140,7 @@
     <TextView
         android:id="@+id/drone_timer"
         android:text="5:00"
-        android:background="@drawable/timer_bg"
+        android:background="@drawable/using_timer_bg"
         android:textColor="@color/black"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
@@ -163,7 +163,7 @@
     <TextView
         android:id="@+id/companion_timer"
         android:text="5:00"
-        android:background="@drawable/timer_bg"
+        android:background="@drawable/using_timer_bg"
         android:textColor="@color/black"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
@@ -186,7 +186,7 @@
     <TextView
         android:id="@+id/time_timer"
         android:text="5:00"
-        android:background="@drawable/timer_bg"
+        android:background="@drawable/using_timer_bg"
         android:textColor="@color/black"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
