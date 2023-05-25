@@ -258,36 +258,25 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
 
         var pair = user.isSkillAvailable(Skill.TIME)
         timeTravelTimer.visibility = if(!pair.first && user.skills.contains(Skill.TIME)) {
-            monitorInUseSkillTimer(Skill.TIME)
+            useSkill(Skill.TIME)
             View.VISIBLE
         } else View.GONE
 
         pair = user.isSkillAvailable(Skill.COMPANION)
         companionTimer.visibility = if(!pair.first && user.skills.contains(Skill.COMPANION)) {
-            monitorInUseSkillTimer(Skill.COMPANION)
+            useSkill(Skill.COMPANION)
             View.VISIBLE
         } else View.GONE
 
         pair = user.isSkillAvailable(Skill.DRONE)
         droneTimer.visibility = if(!pair.first && user.skills.contains(Skill.DRONE)) {
-            monitorInUseSkillTimer(Skill.DRONE){
-                droneLayout.visibility = View.GONE
-                monitorJoystick = false
-                val map = googleMap ?: return@monitorInUseSkillTimer
-                map.uiSettings.isScrollGesturesEnabled = true
-                map.uiSettings.isZoomGesturesEnabled = true
-                map.uiSettings.isRotateGesturesEnabled = true
-                map.uiSettings.isTiltGesturesEnabled = true
-            }
+            useSkill(Skill.DRONE)
             View.VISIBLE
         } else View.GONE
 
         pair = user.isSkillAvailable(Skill.GIANT)
         giantTimer.visibility = if(!pair.first && user.skills.contains(Skill.GIANT)) {
-            monitorInUseSkillTimer(Skill.GIANT){
-                circle?.remove()
-                circle = googleMap?.addCircle(getMyLocationCircle())
-            }
+            useSkill(Skill.GIANT)
             View.VISIBLE
         } else View.GONE
 
@@ -296,39 +285,22 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                 R.id.giant -> {
                     if(!user.isSkillAvailable(Skill.GIANT).first)return@OnClickListener
                     user.lastUsedGiant = Timestamp.now()
-                    monitorInUseSkillTimer(Skill.GIANT)
-                    circle?.remove()
-                    circle = googleMap?.addCircle(getMyLocationCircle())
+                    useSkill(Skill.GIANT)
                 }
                 R.id.companion -> {
                     if(!user.isSkillAvailable(Skill.COMPANION).first)return@OnClickListener
                     user.lastUsedCompanion = Timestamp.now()
-                    monitorInUseSkillTimer(Skill.COMPANION)
+                    useSkill(Skill.COMPANION)
                 }
                 R.id.time_travel -> {
                     if(!user.isSkillAvailable(Skill.TIME).first)return@OnClickListener
                     user.lastUsedTimeTravel = Timestamp.now()
-                    monitorInUseSkillTimer(Skill.TIME)
-                    loadMarkers(true)
+                    useSkill(Skill.TIME)
                 }
                 R.id.drone_skill -> {
                     if(!user.isSkillAvailable(Skill.DRONE).first)return@OnClickListener
                     user.lastUsedDrone = Timestamp.now()
-                    monitorInUseSkillTimer(Skill.DRONE)
-                    droneLayout.visibility = View.VISIBLE
-                    val map = googleMap ?: return@OnClickListener
-                    map.uiSettings.isScrollGesturesEnabled = false
-                    map.uiSettings.isZoomGesturesEnabled = false
-                    map.uiSettings.isRotateGesturesEnabled = false
-                    map.uiSettings.isTiltGesturesEnabled = false
-                    map.moveCamera(
-                        CameraUpdateFactory.newCameraPosition(
-                            CameraPosition.Builder()
-                                .target(Converters.toLatLng(prefs.lastLocation()))
-                                .zoom(DEFAULT_ZOOM)
-                                .build()
-                        )
-                    )
+                    useSkill(Skill.DRONE)
                 }
             }
             user.update()
@@ -349,6 +321,54 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         })
 
         return view
+    }
+
+    private fun useSkill(skill: Skill){
+        monitorInUseSkillTimer(skill){
+            when(skill){
+                Skill.DRONE -> {
+                    droneLayout.visibility = View.GONE
+                    monitorJoystick = false
+                    val map = googleMap ?: return@monitorInUseSkillTimer
+                    map.uiSettings.isScrollGesturesEnabled = true
+                    map.uiSettings.isZoomGesturesEnabled = true
+                    map.uiSettings.isRotateGesturesEnabled = true
+                    map.uiSettings.isTiltGesturesEnabled = true
+                }
+                Skill.GIANT -> {
+                    circle?.remove()
+                    circle = googleMap?.addCircle(getMyLocationCircle())
+                }
+                else -> {}
+            }
+        }
+
+        when(skill){
+            Skill.DRONE -> {
+                droneLayout.visibility = View.VISIBLE
+                val map = googleMap ?: return
+                map.uiSettings.isScrollGesturesEnabled = false
+                map.uiSettings.isZoomGesturesEnabled = false
+                map.uiSettings.isRotateGesturesEnabled = false
+                map.uiSettings.isTiltGesturesEnabled = false
+                map.moveCamera(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder()
+                            .target(Converters.toLatLng(prefs.lastLocation()))
+                            .zoom(DEFAULT_ZOOM)
+                            .build()
+                    )
+                )
+            }
+            Skill.GIANT -> {
+                circle?.remove()
+                circle = googleMap?.addCircle(getMyLocationCircle())
+            }
+            Skill.TIME -> {
+                loadMarkers(true)
+            }
+            else -> {}
+        }
     }
 
     var monitorJoystick = false
