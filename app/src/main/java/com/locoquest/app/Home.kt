@@ -305,6 +305,19 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     user.lastUsedDrone = Timestamp.now()
                     monitorInUseSkillTimer(Skill.DRONE)
                     droneLayout.visibility = View.VISIBLE
+                    val map = googleMap ?: return@OnClickListener
+                    map.uiSettings.isScrollGesturesEnabled = false
+                    map.uiSettings.isZoomGesturesEnabled = false
+                    map.uiSettings.isRotateGesturesEnabled = false
+                    map.uiSettings.isTiltGesturesEnabled = false
+                    map.moveCamera(
+                        CameraUpdateFactory.newCameraPosition(
+                            CameraPosition.Builder()
+                                .target(Converters.toLatLng(prefs.lastLocation()))
+                                .zoom(DEFAULT_ZOOM)
+                                .build()
+                        )
+                    )
                 }
             }
             user.update()
@@ -1069,6 +1082,11 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
                     Skill.DRONE -> {
                         droneLayout.visibility = View.GONE
                         monitorJoystick = false
+                        val map = googleMap ?: return@post
+                        map.uiSettings.isScrollGesturesEnabled = true
+                        map.uiSettings.isZoomGesturesEnabled = true
+                        map.uiSettings.isRotateGesturesEnabled = true
+                        map.uiSettings.isTiltGesturesEnabled = true
                     }
                     else -> {}
                 }
