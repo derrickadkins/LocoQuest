@@ -1,5 +1,6 @@
 package com.locoquest.app
 
+import android.location.Location
 import androidx.room.TypeConverter
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
@@ -70,6 +71,10 @@ class Converters {
     }
 
     companion object {
+        fun toLatLng(location: Location): LatLng {
+            return LatLng(location.latitude, location.longitude)
+        }
+
         fun toMarkerOptions(coin: Coin): MarkerOptions {
             return MarkerOptions()
                 .position(
