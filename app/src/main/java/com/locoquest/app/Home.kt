@@ -212,7 +212,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         userExperience = view.findViewById(R.id.user_exp)
         userExperience.setOnClickListener(openProfileClickListener)
         balance = view.findViewById(R.id.balance)
-        displayUserInfo()
 
         notifyFab = view.findViewById(R.id.notify_fab)
         notifyFab.setOnClickListener {
@@ -251,35 +250,6 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         companionTimer = view.findViewById(R.id.companion_timer)
         droneTimer = view.findViewById(R.id.drone_timer)
         giantTimer = view.findViewById(R.id.giant_timer)
-
-        timeTravel.visibility = if(user.skills.contains(Skill.TIME)) View.VISIBLE else View.GONE
-        companion.visibility = if(user.skills.contains(Skill.COMPANION)) View.VISIBLE else View.GONE
-        drone.visibility = if(user.skills.contains(Skill.DRONE)) View.VISIBLE else View.GONE
-        giant.visibility = if(user.skills.contains(Skill.GIANT)) View.VISIBLE else View.GONE
-
-        var pair = user.isSkillAvailable(Skill.TIME)
-        timeTravelTimer.visibility = if(!pair.first && user.skills.contains(Skill.TIME)) {
-            useSkill(Skill.TIME)
-            View.VISIBLE
-        } else View.GONE
-
-        pair = user.isSkillAvailable(Skill.COMPANION)
-        companionTimer.visibility = if(!pair.first && user.skills.contains(Skill.COMPANION)) {
-            useSkill(Skill.COMPANION)
-            View.VISIBLE
-        } else View.GONE
-
-        pair = user.isSkillAvailable(Skill.DRONE)
-        droneTimer.visibility = if(!pair.first && user.skills.contains(Skill.DRONE)) {
-            useSkill(Skill.DRONE)
-            View.VISIBLE
-        } else View.GONE
-
-        pair = user.isSkillAvailable(Skill.GIANT)
-        giantTimer.visibility = if(!pair.first && user.skills.contains(Skill.GIANT)) {
-            useSkill(Skill.GIANT)
-            View.VISIBLE
-        } else View.GONE
 
         val skillClickListener = View.OnClickListener {
             when(it.id){
@@ -623,6 +593,35 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         userLvl.text = user.level.toString()
         userName.text = user.displayName
         updateProgress()
+
+        timeTravel.visibility = if(user.skills.contains(Skill.TIME)) View.VISIBLE else View.GONE
+        companion.visibility = if(user.skills.contains(Skill.COMPANION)) View.VISIBLE else View.GONE
+        drone.visibility = if(user.skills.contains(Skill.DRONE)) View.VISIBLE else View.GONE
+        giant.visibility = if(user.skills.contains(Skill.GIANT)) View.VISIBLE else View.GONE
+
+        var pair = user.isSkillAvailable(Skill.TIME)
+        timeTravelTimer.visibility = if(!pair.first && user.skills.contains(Skill.TIME)) {
+            useSkill(Skill.TIME)
+            View.VISIBLE
+        } else View.GONE
+
+        pair = user.isSkillAvailable(Skill.COMPANION)
+        companionTimer.visibility = if(!pair.first && user.skills.contains(Skill.COMPANION)) {
+            useSkill(Skill.COMPANION)
+            View.VISIBLE
+        } else View.GONE
+
+        pair = user.isSkillAvailable(Skill.DRONE)
+        droneTimer.visibility = if(!pair.first && user.skills.contains(Skill.DRONE)) {
+            useSkill(Skill.DRONE)
+            View.VISIBLE
+        } else View.GONE
+
+        pair = user.isSkillAvailable(Skill.GIANT)
+        giantTimer.visibility = if(!pair.first && user.skills.contains(Skill.GIANT)) {
+            useSkill(Skill.GIANT)
+            View.VISIBLE
+        } else View.GONE
 
         if(this.isDetached) return
 
@@ -1092,6 +1091,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
 
         timerTxt.visibility = View.VISIBLE
+        timerTxt.setBackgroundResource(R.drawable.using_timer_bg)
+        timerTxt.setTextColor(requireContext().getColor(R.color.black))
 
         Thread{
             scheduleNotification(requireContext(), skill)
@@ -1125,6 +1126,8 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         }
 
         timerTxt.visibility = View.VISIBLE
+        timerTxt.setBackgroundResource(R.drawable.used_timer_bg)
+        timerTxt.setTextColor(requireContext().getColor(R.color.white))
 
         Thread{
             var pair = user.isSkillAvailable(skill)
