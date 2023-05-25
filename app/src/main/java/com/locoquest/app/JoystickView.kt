@@ -76,10 +76,10 @@ class JoystickView @JvmOverloads constructor(
                 val dx = touchX - outerCircleCenter.x
                 val dy = touchY - outerCircleCenter.y
                 val angle = atan2(dy.toDouble(), dx.toDouble())
-                val displacement = calculateDisplacement(dx.toFloat(), dy.toFloat())
+                val displacement = calculateDisplacement(touchX, touchY)
                 val maxDisplacement = outerCircleRadius - innerCircleRadius
 
-// Check if the displacement exceeds the maximum allowed displacement
+                // Check if the displacement exceeds the maximum allowed displacement
                 if (displacement > maxDisplacement) {
                     val constrainedX = (outerCircleCenter.x + maxDisplacement * cos(angle)).toFloat()
                     val constrainedY = (outerCircleCenter.y + maxDisplacement * sin(angle)).toFloat()
