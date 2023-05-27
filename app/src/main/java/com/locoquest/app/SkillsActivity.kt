@@ -3,6 +3,7 @@ package com.locoquest.app
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -55,6 +56,16 @@ class SkillsActivity : AppCompatActivity() {
         val giantReach = findViewById<Button>(R.id.unlock_giant_reach)
         
         val timeCharge = findViewById<Button>(R.id.unlock_time_charger)
+
+        val companionCostLayout = findViewById<LinearLayout>(R.id.companion_cost_layout)
+        val droneCostLayout = findViewById<LinearLayout>(R.id.drone_cost_layout)
+        val giantCostLayout = findViewById<LinearLayout>(R.id.giant_cost_layout)
+        val timeCostLayout = findViewById<LinearLayout>(R.id.time_cost_layout)
+
+        findViewById<TextView>(R.id.companion_cost).text = Skill.COMPANION.cost.toString()
+        findViewById<TextView>(R.id.drone_cost).text = Skill.DRONE.cost.toString()
+        findViewById<TextView>(R.id.giant_cost).text = Skill.GIANT.cost.toString()
+        findViewById<TextView>(R.id.time_cost).text = Skill.TIME.cost.toString()
         
         companion.visibility = if(user.skills.contains(Skill.COMPANION)) View.GONE else View.VISIBLE
         drone.visibility = if(user.skills.contains(Skill.DRONE)) View.GONE else View.VISIBLE
@@ -75,17 +86,43 @@ class SkillsActivity : AppCompatActivity() {
         
         timeCharge.visibility = if(user.upgrades.contains(Upgrade.TIME_CHARGE)) View.GONE else View.VISIBLE
 
-        val unlockListener = View.OnClickListener {
+        val unlockSkillListener = View.OnClickListener {
+            if(user.skillPoints < 1){
+                Toast.makeText(this, "You don't have any skill points", Toast.LENGTH_SHORT).show()
+                return@OnClickListener
+            }
+            val (skill, upgrades, costLayout) = when(it.id){
+                R.id.unlock_companion -> Triple(Skill.COMPANION, companionUpgrades, companionCostLayout)
+                R.id.unlock_drone -> Triple(Skill.DRONE, droneUpgrades, droneCostLayout)
+                R.id.unlock_giant -> Triple(Skill.GIANT, giantUpgrades, giantCostLayout)
+                R.id.unlock_time -> Triple(Skill.TIME, timeUpgrades, timeCostLayout)
+                else -> return@OnClickListener
+            }
+
+            if(user.balance < skill.cost){
+                Toast.makeText(this, "You don't have enough coins", Toast.LENGTH_SHORT).show()
+                return@OnClickListener
+            }
+
+            user.balance -= skill.cost
+            user.skillPoints--
+            user.skills.add(skill)
+            user.update()
+
+            it.visibility = View.GONE
+            costLayout.visibility = View.GONE
+            upgrades.visibility = View.VISIBLE
+            skillPts.text = "Skill Points: ${user.skillPoints}"
+            resetCost.text = calcResetCost().toString()
+        }
+
+        val unlockUpgradeListener = View.OnClickListener {
             if(user.skillPoints < 1){
                 Toast.makeText(this, "You don't have any skill points", Toast.LENGTH_SHORT).show()
                 return@OnClickListener
             }
 
             when(it.id){
-                R.id.unlock_companion -> {
-                    user.skills.add(Skill.COMPANION)
-                    companionUpgrades.visibility = View.VISIBLE
-                }
                 R.id.unlock_companion_batt -> {
                     user.upgrades.add(Upgrade.COMPANION_BATT)
                 }
@@ -96,10 +133,6 @@ class SkillsActivity : AppCompatActivity() {
                     user.upgrades.add(Upgrade.COMPANION_MOTOR)
                 }
 
-                R.id.unlock_drone -> {
-                    user.skills.add(Skill.DRONE)
-                    droneUpgrades.visibility = View.VISIBLE
-                }
                 R.id.unlock_drone_batt -> {
                     user.upgrades.add(Upgrade.DRONE_BATT)
                 }
@@ -110,10 +143,6 @@ class SkillsActivity : AppCompatActivity() {
                     user.upgrades.add(Upgrade.DRONE_MOTOR)
                 }
 
-                R.id.unlock_giant -> {
-                    user.skills.add(Skill.GIANT)
-                    giantUpgrades.visibility = View.VISIBLE
-                }
                 R.id.unlock_giant_batt -> {
                     user.upgrades.add(Upgrade.GIANT_BATT)
                 }
@@ -124,10 +153,6 @@ class SkillsActivity : AppCompatActivity() {
                     user.upgrades.add(Upgrade.GIANT_REACH)
                 }
 
-                R.id.unlock_time -> {
-                    user.skills.add(Skill.TIME)
-                    timeUpgrades.visibility = View.VISIBLE
-                }
                 R.id.unlock_time_charger -> {
                     user.upgrades.add(Upgrade.TIME_CHARGE)
                 }
@@ -140,24 +165,24 @@ class SkillsActivity : AppCompatActivity() {
             resetCost.text = calcResetCost().toString()
         }
 
-        companion.setOnClickListener(unlockListener)
-        drone.setOnClickListener(unlockListener)
-        giant.setOnClickListener(unlockListener)
-        time.setOnClickListener(unlockListener)
+        companion.setOnClickListener(unlockSkillListener)
+        drone.setOnClickListener(unlockSkillListener)
+        giant.setOnClickListener(unlockSkillListener)
+        time.setOnClickListener(unlockSkillListener)
 
-        companionBatt.setOnClickListener(unlockListener)
-        companionCharge.setOnClickListener(unlockListener)
-        companionMotor.setOnClickListener(unlockListener)
+        companionBatt.setOnClickListener(unlockUpgradeListener)
+        companionCharge.setOnClickListener(unlockUpgradeListener)
+        companionMotor.setOnClickListener(unlockUpgradeListener)
 
-        droneBatt.setOnClickListener(unlockListener)
-        droneCharge.setOnClickListener(unlockListener)
-        droneMotor.setOnClickListener(unlockListener)
+        droneBatt.setOnClickListener(unlockUpgradeListener)
+        droneCharge.setOnClickListener(unlockUpgradeListener)
+        droneMotor.setOnClickListener(unlockUpgradeListener)
 
-        giantBatt.setOnClickListener(unlockListener)
-        giantCharge.setOnClickListener(unlockListener)
-        giantReach.setOnClickListener(unlockListener)
+        giantBatt.setOnClickListener(unlockUpgradeListener)
+        giantCharge.setOnClickListener(unlockUpgradeListener)
+        giantReach.setOnClickListener(unlockUpgradeListener)
 
-        timeCharge.setOnClickListener(unlockListener)
+        timeCharge.setOnClickListener(unlockUpgradeListener)
 
         val reset = findViewById<Button>(R.id.reset_skills)
         reset.setOnClickListener{
