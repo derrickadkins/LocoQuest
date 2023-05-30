@@ -220,10 +220,10 @@ class SkillsActivity : AppCompatActivity() {
             giantReach.visibility = View.VISIBLE
             timeCharge.visibility = View.VISIBLE
 
-            companion.visibility = View.VISIBLE
-            drone.visibility = View.VISIBLE
-            giant.visibility = View.VISIBLE
-            time.visibility = View.VISIBLE
+            companionCostLayout.visibility = View.VISIBLE
+            droneCostLayout.visibility = View.VISIBLE
+            giantCostLayout.visibility = View.VISIBLE
+            timeCostLayout.visibility = View.VISIBLE
 
             Skill.values().forEach { cancelNotification(this, it) }
         }
