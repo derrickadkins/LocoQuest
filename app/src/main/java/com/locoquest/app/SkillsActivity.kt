@@ -66,11 +66,11 @@ class SkillsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.drone_cost).text = Skill.DRONE.cost.toString()
         findViewById<TextView>(R.id.giant_cost).text = Skill.GIANT.cost.toString()
         findViewById<TextView>(R.id.time_cost).text = Skill.TIME.cost.toString()
-        
-        companion.visibility = if(user.skills.contains(Skill.COMPANION)) View.GONE else View.VISIBLE
-        drone.visibility = if(user.skills.contains(Skill.DRONE)) View.GONE else View.VISIBLE
-        giant.visibility = if(user.skills.contains(Skill.GIANT)) View.GONE else View.VISIBLE
-        time.visibility = if(user.skills.contains(Skill.TIME)) View.GONE else View.VISIBLE
+
+        companionCostLayout.visibility = if(user.skills.contains(Skill.COMPANION)) View.GONE else View.VISIBLE
+        droneCostLayout.visibility = if(user.skills.contains(Skill.DRONE)) View.GONE else View.VISIBLE
+        giantCostLayout.visibility = if(user.skills.contains(Skill.GIANT)) View.GONE else View.VISIBLE
+        timeCostLayout.visibility = if(user.skills.contains(Skill.TIME)) View.GONE else View.VISIBLE
         
         companionBatt.visibility = if(user.upgrades.contains(Upgrade.COMPANION_BATT)) View.GONE else View.VISIBLE
         companionCharge.visibility = if(user.upgrades.contains(Upgrade.COMPANION_CHARGE)) View.GONE else View.VISIBLE
