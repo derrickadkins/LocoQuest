@@ -140,8 +140,12 @@ class Profile(private val user: User,
             startActivity(Intent(requireContext(), SkillsActivity::class.java))
         }
 
+        fun getLvlUpVisibility() : Int {
+            return if (user.level < Level.values().size && user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+        }
+
         val lvlUp = view.findViewById<Button>(R.id.level_up_btn)
-        lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+        lvlUp.visibility = getLvlUpVisibility()
         lvlUp.setOnClickListener {
             user.skillPoints++
             user.level++
@@ -149,7 +153,7 @@ class Profile(private val user: User,
             skillPoints.text = user.skillPoints.toString()
             lvlProgression.text = "${user.experience}/${Level.getLimits(user.level).second}"
             updateProgress()
-            lvlUp.visibility = if (user.experience >= Level.getLimits(user.level).second) View.VISIBLE else View.GONE
+            lvlUp.visibility = getLvlUpVisibility()
             user.update()
         }
 
