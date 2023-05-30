@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity(), ISecondaryFragment, Home.HomeListener,
                         }.show()
                 }
             }
-            NOTIFICATIONS_REQUEST_CODE -> if(grantResults[0] == 0) home.onNotificationsEnabled()
+            //NOTIFICATIONS_REQUEST_CODE -> if(grantResults[0] == 0) home.onNotificationsEnabled()
         }
     }
 
