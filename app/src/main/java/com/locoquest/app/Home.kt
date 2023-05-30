@@ -1095,6 +1095,16 @@ class Home(private val homeListener: HomeListener) : Fragment(), OnMapReadyCallb
         timerTxt.setTextColor(requireContext().getColor(R.color.black))
 
         Thread{
+            val notificationManger = requireContext().getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                !notificationManger.areNotificationsEnabled()) {
+                ActivityCompat.requestPermissions(
+                    requireActivity(),
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    MainActivity.NOTIFICATIONS_REQUEST_CODE
+                )
+            }
+
             scheduleNotification(requireContext(), skill)
             var pair = user.isSkillInUse(skill)
             while (pair.first){
